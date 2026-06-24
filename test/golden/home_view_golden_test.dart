@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
-import 'package:mobdev_finals-app/app/app.locator.dart';
-import 'package:mobdev_finals-app/ui/views/home/home_view.dart';
+import 'package:mobdev_finals_app/app/app.locator.dart';
+import 'package:mobdev_finals_app/ui/views/home/home_view.dart';
 
 void main() {
   setUpAll(() => setupLocator());

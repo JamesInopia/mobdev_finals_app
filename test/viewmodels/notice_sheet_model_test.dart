@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobdev_finals-app/app/app.locator.dart';
+import 'package:mobdev_finals_app/app/app.locator.dart';
 
 import '../helpers/test_helpers.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
-import 'package:mobdev_finals-app/ui/common/app_colors.dart';
-import 'package:mobdev_finals-app/ui/common/ui_helpers.dart';
+import 'package:mobdev_finals_app/ui/common/app_colors.dart';
+import 'package:mobdev_finals_app/ui/common/ui_helpers.dart';
 
 import 'home_viewmodel.dart';
 

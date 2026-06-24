@@ -1,7 +1,7 @@
-import 'package:mobdev_finals-app/app/app.bottomsheets.dart';
-import 'package:mobdev_finals-app/app/app.dialogs.dart';
-import 'package:mobdev_finals-app/app/app.locator.dart';
-import 'package:mobdev_finals-app/ui/common/app_strings.dart';
+import 'package:mobdev_finals_app/app/app.bottomsheets.dart';
+import 'package:mobdev_finals_app/app/app.dialogs.dart';
+import 'package:mobdev_finals_app/app/app.locator.dart';
+import 'package:mobdev_finals_app/ui/common/app_strings.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 

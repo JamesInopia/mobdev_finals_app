@@ -1,6 +1,6 @@
 import 'package:stacked/stacked.dart';
-import 'package:mobdev_finals-app/app/app.locator.dart';
-import 'package:mobdev_finals-app/app/app.router.dart';
+import 'package:mobdev_finals_app/app/app.locator.dart';
+import 'package:mobdev_finals_app/app/app.router.dart';
 import 'package:stacked_services/stacked_services.dart';
 
 class StartupViewModel extends BaseViewModel {

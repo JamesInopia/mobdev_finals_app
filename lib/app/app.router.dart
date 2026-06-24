@@ -28,7 +28,7 @@ class StackedRouter extends _i1.RouterBase {
   final _routes = <_i1.RouteDef>[
     _i1.RouteDef(
       Routes.homeView,
-      page: _i2.HomeView,
+      page: _i2.FixedLayout,
     ),
     _i1.RouteDef(
       Routes.startupView,
@@ -37,12 +37,12 @@ class StackedRouter extends _i1.RouterBase {
   ];
 
   final _pagesMap = <Type, _i1.StackedRouteFactory>{
-    _i2.HomeView: (data) {
+    _i2.FixedLayout: (data) {
       final args = data.getArgs<HomeViewArguments>(
         orElse: () => const HomeViewArguments(),
       );
       return _i4.MaterialPageRoute<dynamic>(
-        builder: (context) => _i2.HomeView(key: args.key),
+        builder: (context) => _i2.FixedLayout(key: args.key),
         settings: data,
       );
     },

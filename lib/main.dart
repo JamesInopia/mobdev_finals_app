@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mobdev_finals-app/app/app.bottomsheets.dart';
-import 'package:mobdev_finals-app/app/app.dialogs.dart';
-import 'package:mobdev_finals-app/app/app.locator.dart';
-import 'package:mobdev_finals-app/app/app.router.dart';
+import 'package:mobdev_finals_app/app/app.bottomsheets.dart';
+import 'package:mobdev_finals_app/app/app.dialogs.dart';
+import 'package:mobdev_finals_app/app/app.locator.dart';
+import 'package:mobdev_finals_app/app/app.router.dart';
 import 'package:stacked_services/stacked_services.dart';
 
 Future<void> main() async {

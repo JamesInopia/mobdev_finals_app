@@ -1,3 +1,6 @@
+// loading screen 
+// edit to match color scheme and have custom app logo
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:stacked/stacked.dart';

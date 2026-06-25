@@ -8,18 +8,18 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:flutter/material.dart' as _i4;
 import 'package:flutter/material.dart';
-import 'package:mobdev_finals_app/ui/views/home/home_view.dart' as _i2;
+import 'package:mobdev_finals_app/ui/views/template/app_template.dart' as _i2;
 import 'package:mobdev_finals_app/ui/views/startup/startup_view.dart' as _i3;
 import 'package:stacked/stacked.dart' as _i1;
 import 'package:stacked_services/stacked_services.dart' as _i5;
 
 class Routes {
-  static const homeView = '/home-view';
+  static const fixedLayout = '/fixed-layout';
 
   static const startupView = '/startup-view';
 
   static const all = <String>{
-    homeView,
+    fixedLayout,
     startupView,
   };
 }
@@ -27,7 +27,7 @@ class Routes {
 class StackedRouter extends _i1.RouterBase {
   final _routes = <_i1.RouteDef>[
     _i1.RouteDef(
-      Routes.homeView,
+      Routes.fixedLayout,
       page: _i2.FixedLayout,
     ),
     _i1.RouteDef(
@@ -38,8 +38,8 @@ class StackedRouter extends _i1.RouterBase {
 
   final _pagesMap = <Type, _i1.StackedRouteFactory>{
     _i2.FixedLayout: (data) {
-      final args = data.getArgs<HomeViewArguments>(
-        orElse: () => const HomeViewArguments(),
+      final args = data.getArgs<FixedLayoutArguments>(
+        orElse: () => const FixedLayoutArguments(),
       );
       return _i4.MaterialPageRoute<dynamic>(
         builder: (context) => _i2.FixedLayout(key: args.key),
@@ -64,8 +64,8 @@ class StackedRouter extends _i1.RouterBase {
   Map<Type, _i1.StackedRouteFactory> get pagesMap => _pagesMap;
 }
 
-class HomeViewArguments {
-  const HomeViewArguments({this.key});
+class FixedLayoutArguments {
+  const FixedLayoutArguments({this.key});
 
   final _i4.Key? key;
 
@@ -75,7 +75,7 @@ class HomeViewArguments {
   }
 
   @override
-  bool operator ==(covariant HomeViewArguments other) {
+  bool operator ==(covariant FixedLayoutArguments other) {
     if (identical(this, other)) return true;
     return other.key == key;
   }
@@ -109,7 +109,7 @@ class StartupViewArguments {
 }
 
 extension NavigatorStateExtension on _i5.NavigationService {
-  Future<dynamic> navigateToHomeView({
+  Future<dynamic> navigateToFixedLayout({
     _i4.Key? key,
     int? routerId,
     bool preventDuplicates = true,
@@ -117,8 +117,8 @@ extension NavigatorStateExtension on _i5.NavigationService {
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
   }) async {
-    return navigateTo<dynamic>(Routes.homeView,
-        arguments: HomeViewArguments(key: key),
+    return navigateTo<dynamic>(Routes.fixedLayout,
+        arguments: FixedLayoutArguments(key: key),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,
@@ -141,7 +141,7 @@ extension NavigatorStateExtension on _i5.NavigationService {
         transition: transition);
   }
 
-  Future<dynamic> replaceWithHomeView({
+  Future<dynamic> replaceWithFixedLayout({
     _i4.Key? key,
     int? routerId,
     bool preventDuplicates = true,
@@ -149,8 +149,8 @@ extension NavigatorStateExtension on _i5.NavigationService {
     Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
         transition,
   }) async {
-    return replaceWith<dynamic>(Routes.homeView,
-        arguments: HomeViewArguments(key: key),
+    return replaceWith<dynamic>(Routes.fixedLayout,
+        arguments: FixedLayoutArguments(key: key),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,

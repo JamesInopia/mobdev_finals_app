@@ -1,3 +1,5 @@
+// checks authentication, routes to either login or home
+
 import 'package:stacked/stacked.dart';
 import 'package:mobdev_finals_app/app/app.locator.dart';
 import 'package:mobdev_finals_app/app/app.router.dart';

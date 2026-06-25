@@ -3,7 +3,7 @@ import 'package:mockito/mockito.dart';
 import 'package:mobdev_finals_app/app/app.bottomsheets.dart';
 import 'package:mobdev_finals_app/app/app.locator.dart';
 import 'package:mobdev_finals_app/ui/common/app_strings.dart';
-import 'package:mobdev_finals_app/ui/views/home/home_viewmodel.dart';
+import 'package:mobdev_finals_app/ui/views/template/app_templatemodel.dart';
 
 import '../helpers/test_helpers.dart';
 

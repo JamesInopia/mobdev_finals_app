@@ -24,52 +24,55 @@ class FixedLayoutView extends StackedView<FixedLayoutViewModel> {
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 16.0),
-            child: Icon(Icons.more_horiz, color: Colors.white),
+            child: Icon(Icons.menu, color: Colors.white),
           ),
         ],
       ),
       body: IndexedStack(
         index: viewModel.currentIndex,
         children: const [
-          HomePage(),
-          BlockerPage(),
-          AboutPage(),
+          HomePage(), // index = 0
+          BlockerPage(), // index = 1
+          AboutPage(), // index = 2
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        bottom: true,
-        child: Container(
-          color: AppColors.navigation,
-          padding: EdgeInsets.symmetric(
-            vertical: MediaQuery.of(context).size.height * 0.01,
-          ),
-          child: Padding(
+      bottomNavigationBar: Container(
+        color: AppColors.navigation,
+        child: SafeArea(
+          bottom: true,
+          child: Container(
+            color: AppColors.navigation,
             padding: EdgeInsets.symmetric(
-              vertical: MediaQuery.of(context).size.height * 0.001,
-              horizontal: 5,
+              vertical: MediaQuery.of(context).size.height * 0.01,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _NavItem(
-                  icon: Icons.home,
-                  label: 'Home',
-                  selected: viewModel.currentIndex == 0,
-                  onTap: () => viewModel.setIndex(0),
-                ),
-                _NavItem(
-                  icon: Icons.lock,
-                  label: 'Blocker',
-                  selected: viewModel.currentIndex == 1,
-                  onTap: () => viewModel.setIndex(1),
-                ),
-                _NavItem(
-                  icon: Icons.person,
-                  label: 'About',
-                  selected: viewModel.currentIndex == 2,
-                  onTap: () => viewModel.setIndex(2),
-                ),
-              ],
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: MediaQuery.of(context).size.height * 0.001,
+                horizontal: 5,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _NavItem(
+                    icon: Icons.home,
+                    label: 'Home',
+                    selected: viewModel.currentIndex == 0,
+                    onTap: () => viewModel.setIndex(0),
+                  ),
+                  _NavItem(
+                    icon: Icons.lock,
+                    label: 'Blocker',
+                    selected: viewModel.currentIndex == 1,
+                    onTap: () => viewModel.setIndex(1),
+                  ),
+                  _NavItem(
+                    icon: Icons.person,
+                    label: 'About',
+                    selected: viewModel.currentIndex == 2,
+                    onTap: () => viewModel.setIndex(2),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -104,12 +107,14 @@ class _NavItem extends StatelessWidget {
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
-            color: selected ? AppColors.accent1 : AppColors.navigation,
+            color: selected
+                ? AppColors.accent1.withValues(alpha: 1)
+                : AppColors.accent1.withValues(alpha: 0),
             borderRadius: BorderRadius.circular(6),
             boxShadow: selected
                 ? [
                     BoxShadow(
-                      color: AppColors.accent1.withOpacity(0.6),
+                      color: AppColors.accent1.withValues(alpha: 0.9),
                       blurRadius: 12,
                       spreadRadius: 2,
                     ),

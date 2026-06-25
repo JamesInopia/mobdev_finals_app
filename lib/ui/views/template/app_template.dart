@@ -6,29 +6,16 @@ import 'package:mobdev_finals_app/ui/common/app_colors.dart';
 import 'package:mobdev_finals_app/ui/common/ui_helpers.dart';
 
 import 'app_templatemodel.dart';
+import '../theme/app_colors.dart';
+import '../pages/page_home.dart';
+import '../pages/page_blocker.dart';
+import '../pages/page_about.dart';
 
 class FixedLayout extends StatefulWidget {
   const FixedLayout({super.key});
 
   @override
   State<FixedLayout> createState() => _FixedLayoutState();
-}
-
-// Defines App Color Scheme
-class AppColors {
-  //surely no virus
-  static const Color navigation = Color(0xFF261F32);
-  static const Color accent1 = Color(0xFFB887F3);
-  static const Color accent2 = Color(0xFF684B8C);
-  static const Color accent3 = Color(0xFF3E2D52);
-  static const Color secondary1 = Color(0xFF261F32);
-  static const Color secondary2 = Color(0xFF251442);
-  static const Color secondary3 = Color(0xFF36156E);
-  static const LinearGradient appBG = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [Color(0xFF1C1723), Color(0xFF19092C)],
-  );
 }
 
 // Custom Bottom NavBar Item
@@ -86,6 +73,13 @@ class _NavItem extends StatelessWidget {
 class _FixedLayoutState extends State<FixedLayout> {
   int _currentIndex = 0;
 
+  // List of pages to switch between
+  final List<Widget> _pages = const [
+    PageHome(),
+    PageBlocker(),
+    PageAbout(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,16 +98,9 @@ class _FixedLayoutState extends State<FixedLayout> {
           ),
         ],
       ),
-      body: Center(
-        child: Text(
-          _currentIndex == 0
-              ? 'Home Screen'
-              : _currentIndex == 1
-                  ? 'Search Screen'
-                  : 'Profile Screen',
-          style: const TextStyle(fontSize: 24, color: Colors.white),
-        ),
-      ),
+      // Instead of Text, show the selected page
+      body: _pages[_currentIndex],
+
       bottomNavigationBar: SafeArea(
         bottom: true,
         child: Container(

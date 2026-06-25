@@ -1,13 +1,16 @@
 // all about content
 import 'package:flutter/material.dart';
 
-class PageAbout extends StatelessWidget {
-  const PageAbout({super.key});
+class AboutPage extends StatelessWidget {
+  const AboutPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text('About'),
+    return const Center(
+      child: Text(
+        'About Page Content',
+        style: TextStyle(fontSize: 20),
+      ),
     );
   }
 }

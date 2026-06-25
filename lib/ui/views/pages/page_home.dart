@@ -1,13 +1,16 @@
 // all home content
 import 'package:flutter/material.dart';
 
-class PageHome extends StatelessWidget {
-  const PageHome({super.key});
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text('Home Page'),
+    return const Center(
+      child: Text(
+        'Home Page Content',
+        style: TextStyle(fontSize: 20),
+      ),
     );
   }
 }

@@ -1,14 +1,16 @@
 // all blocker content
-// page_home.dart
 import 'package:flutter/material.dart';
 
-class PageBlocker extends StatelessWidget {
-  const PageBlocker({super.key});
+class BlockerPage extends StatelessWidget {
+  const BlockerPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text('Blocker'),
+    return const Center(
+      child: Text(
+        'Blocker Page Content',
+        style: TextStyle(fontSize: 20),
+      ),
     );
   }
 }

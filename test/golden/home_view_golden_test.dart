@@ -8,23 +8,23 @@ void main() {
   setUpAll(() => setupLocator());
   tearDownAll(() => locator.reset());
 
-  testGoldens('HomeView - default state', (tester) async {
+  testGoldens('FixedLayoutView - default state', (tester) async {
     await loadAppFonts();
 
     // Set device pixel ratio and size
     await tester.binding.setSurfaceSize(const Size(393, 852));
-    tester.binding.window.devicePixelRatioTestValue = 1.0;
+    tester.view.devicePixelRatio = 1.0; // updated API
 
     await tester.pumpWidget(
       const MediaQuery(
         data: MediaQueryData(size: Size(393, 852), devicePixelRatio: 1.0),
         child: MaterialApp(
-            debugShowCheckedModeBanner: false,
-            home:
-                FixedLayout()), //naa pa diay "allow usb debugging" nga popup lmao
+          debugShowCheckedModeBanner: false,
+          home: FixedLayoutView(), // no body/initialIndex anymore
+        ),
       ),
     );
 
-    await screenMatchesGolden(tester, 'home_view_default');
+    await screenMatchesGolden(tester, 'fixed_layout_default');
   });
 }

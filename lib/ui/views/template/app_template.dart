@@ -20,13 +20,39 @@ class FixedLayoutView extends StackedView<FixedLayoutViewModel> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.navigation,
-        title: const Text('My App'),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16.0),
-            child: Icon(Icons.menu, color: Colors.white),
-          ),
-        ],
+        leading: Builder(
+          builder: (context) {
+            return IconButton(
+              icon: const Icon(Icons.menu, color: Colors.white),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
+        ),
+      ),
+      drawer: Drawer(
+        backgroundColor: AppColors.accent3,
+        child: ListView(
+          padding: const EdgeInsets.only(top: 30, left: 5, right: 5),
+          children: [
+            Theme(
+              data: Theme.of(context).copyWith(
+                listTileTheme: const ListTileThemeData(
+                  textColor: Colors.white,
+                ),
+              ),
+              child: Column(
+                children: const [
+                  ListTile(title: Text('Settings')),
+                  ListTile(title: Text('About')),
+                  ListTile(title: Text('Privacy')),
+                  ListTile(title: Text('Report a Problem')),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
       body: IndexedStack(
         index: viewModel.currentIndex,
@@ -120,10 +146,10 @@ class _NavItem extends StatelessWidget {
                   ]
                 : [],
           ),
-          padding: const EdgeInsets.symmetric(vertical: 3), // compact sizing
+          padding: const EdgeInsets.symmetric(vertical: 3),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center, // centered content
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 icon,

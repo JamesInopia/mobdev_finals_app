@@ -85,7 +85,6 @@ class FixedLayoutView extends StackedView<FixedLayoutViewModel> {
       FixedLayoutViewModel(0);
 }
 
-// ✅ Only one _NavItem class remains
 class _NavItem extends StatelessWidget {
   final IconData icon;
   final String label;

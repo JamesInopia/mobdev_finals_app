@@ -1,4 +1,5 @@
 // all blocker content
+// all blocker content
 import 'package:flutter/material.dart';
 
 class BlockerPage extends StatelessWidget {
@@ -6,10 +7,40 @@ class BlockerPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Blocker Page Content',
-        style: TextStyle(fontSize: 20),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        body: Column(
+          children: [
+            SizedBox(
+              height: 40,
+              child: const TabBar(
+                tabs: [
+                  Tab(text: 'Apps'),
+                  Tab(text: 'Sites'),
+                ],
+              ),
+            ),
+            const Expanded(
+              child: TabBarView(
+                children: [
+                  Center(
+                    child: Text(
+                      'Apps',
+                      style: TextStyle(fontSize: 24),
+                    ),
+                  ),
+                  Center(
+                    child: Text(
+                      'Sites',
+                      style: TextStyle(fontSize: 24),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

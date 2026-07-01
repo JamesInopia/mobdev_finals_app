@@ -1,12 +1,19 @@
 // appbar, bottomnav, page switcher
 import 'package:flutter/material.dart';
+import 'package:mobdev_finals_app/ui/views/template/app_menutab_template.dart';
 import 'package:mobdev_finals_app/ui/views/theme/app_colors.dart';
 import 'package:stacked/stacked.dart';
 import 'app_templatemodel.dart';
 import '../pages/page_home.dart';
 import '../pages/page_blocker.dart';
+import '../pages/page_timer.dart';
+import '../pages/page_settings.dart';
 import '../pages/page_about.dart';
+import '../pages/page_report.dart';
 import 'package:mobdev_finals_app/ui/common/app_colors.dart';
+
+//temporary for button
+import 'dart:developer' as developer;
 
 class FixedLayoutView extends StackedView<FixedLayoutViewModel> {
   const FixedLayoutView({super.key});
@@ -43,11 +50,51 @@ class FixedLayoutView extends StackedView<FixedLayoutViewModel> {
                 ),
               ),
               child: Column(
-                children: const [
-                  ListTile(title: Text('Settings')),
-                  ListTile(title: Text('About')),
-                  ListTile(title: Text('Privacy')),
-                  ListTile(title: Text('Report a Problem')),
+                children: [
+                  ListTile(
+                      title: const Text('Settings'),
+                      onTap: () {
+                        developer.log('Works!');
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (context) =>
+                                const MenuTabTemplate(initialIndex: 0),
+                          ),
+                        );
+                      }),
+                  ListTile(
+                      title: const Text('About'),
+                      onTap: () {
+                        developer.log('Works!');
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (context) =>
+                                const MenuTabTemplate(initialIndex: 1),
+                          ),
+                        );
+                      }),
+                  ListTile(
+                      title: const Text('Privacy'),
+                      onTap: () {
+                        developer.log('Works!');
+                      }),
+                  ListTile(
+                      title: const Text('Report a Problem'),
+                      onTap: () {
+                        developer.log('Works!');
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (context) =>
+                                const MenuTabTemplate(initialIndex: 2),
+                          ),
+                        );
+                      }),
                 ],
               ),
             ),
@@ -59,7 +106,7 @@ class FixedLayoutView extends StackedView<FixedLayoutViewModel> {
         children: const [
           HomePage(), // index = 0
           BlockerPage(), // index = 1
-          AboutPage(), // index = 2
+          TimerPage(), // index = 2
         ],
       ),
       bottomNavigationBar: Container(
@@ -92,8 +139,8 @@ class FixedLayoutView extends StackedView<FixedLayoutViewModel> {
                     onTap: () => viewModel.setIndex(1),
                   ),
                   _NavItem(
-                    icon: Icons.person,
-                    label: 'About',
+                    icon: Icons.timer,
+                    label: 'Timer',
                     selected: viewModel.currentIndex == 2,
                     onTap: () => viewModel.setIndex(2),
                   ),

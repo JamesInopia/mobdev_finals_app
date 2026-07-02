@@ -91,9 +91,56 @@ class _BlockerPageState extends State<BlockerPage>
       body: TabBarView(
         controller: _tabController,
         children: const [
-          Center(child: Text('Apps', style: TextStyle(fontSize: 24))),
-          Center(child: Text('Sites', style: TextStyle(fontSize: 24))),
+          EmptyNoData(tab: "Apps"),
+          EmptyNoData(tab: "Sites"),
         ],
+      ),
+    );
+  }
+}
+
+class EmptyNoData extends StatelessWidget {
+  final String tab;
+
+  const EmptyNoData({
+    super.key,
+    required this.tab,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.inbox_outlined,
+                size: 80,
+                color: Theme.of(context).colorScheme.outline,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'No $tab yet',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Block $tab that distract you to start being productive',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.add),
+                label: const Text('Add Item'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

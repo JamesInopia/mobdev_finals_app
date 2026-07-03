@@ -1,19 +1,15 @@
 // all home content
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-// IMPORT LOGIC: Point directly to your storage service file
+import 'package:mobdev_finals_app/ui/widgets/empty.dart';
 import 'package:mobdev_finals_app/services/storage_service.dart';
+import 'package:mobdev_finals_app/utilities/timeformat_utilities.dart';
+import 'package:mobdev_finals_app/ui/views/pages/page_blocker.dart';
 
 const _cards = [
   {'type': 'Blocked Applications', 'content': 'List of blocked apps goes here'},
-  {
-    'type': 'Blocked Websites',
-    'content': 'DYNAMIC_STORAGE_LINK'
-  }, // Target placeholder
-  {
-    'type': 'Apps in Timeout',
-    'content': '' // empty → show EmptyNoData
-  },
+  {'type': 'Blocked Websites', 'content': 'DYNAMIC_STORAGE_LINK'},
+  {'type': 'Apps in Timeout', 'content': ''},
   {
     'type': 'Apps blocked for this period',
     'content': 'Some apps are blocked until tomorrow'
@@ -26,22 +22,23 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Container(
-      decoration: BoxDecoration(gradient: AppColors.appBG),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(20),
-            child: Text('Hello, [username]!',
+      body: Container(
+        decoration: BoxDecoration(gradient: AppColors.appBG),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(20),
+              child: Text('Hello, [username]!',
+                  style: TextStyle(color: Colors.white)),
+            ),
+            const Text("Let's take a look at your progress!",
                 style: TextStyle(color: Colors.white)),
-          ),
-          const Text("Let's take a look at your progress!",
-              style: TextStyle(color: Colors.white)),
-          const Expanded(child: HorizontalGallery()),
-        ],
+            const Expanded(child: HorizontalGallery()),
+          ],
+        ),
       ),
-    ));
+    );
   }
 }
 
@@ -53,6 +50,7 @@ class HorizontalGallery extends StatefulWidget {
 }
 
 class _HorizontalGalleryState extends State<HorizontalGallery> {
+  final LinkStorageService _storageService = LinkStorageService();
   final _controller = PageController(viewportFraction: 0.85);
   var _currentPage = 0.0;
 
@@ -115,9 +113,12 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
                           ),
                           Expanded(
                             child: card['content'] == 'DYNAMIC_STORAGE_LINK'
-                                ? _buildDynamicLinkCardBody() // Read async link list
+                                ? _buildDynamicLinkCardBody()
                                 : _buildStaticCardBody(
-                                    card['content'] as String),
+                                    card['content'] as String,
+                                    card['type']
+                                        as String, // FIX: Properly wrapped inside parameters
+                                  ),
                           ),
                         ],
                       ),
@@ -152,8 +153,18 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
   }
 
   // Helper 1: Builds standard static text cards or fallback Empty state
-  Widget _buildStaticCardBody(String content) {
-    if (content.isEmpty) return const EmptyNoData();
+  Widget _buildStaticCardBody(String content, String tabName) {
+    if (content.isEmpty) {
+      return EmptyNoData(
+        tab: tabName,
+        onActionPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const BlockerPage()),
+          );
+        },
+      );
+    }
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Text(content),
@@ -163,15 +174,24 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
   // Helper 2: Asynchronously fetches SharedPreferences tracking data
   Widget _buildDynamicLinkCardBody() {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: getLinksList(), // Storage API call
+      future: _storageService.getLinks(), // Using service instance
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
-              child: CircularProgressIndicator(color: Colors.white));
+            child: CircularProgressIndicator(color: Colors.white),
+          );
         }
 
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const EmptyNoData();
+          return EmptyNoData(
+            tab: 'Websites',
+            onActionPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const BlockerPage()),
+              );
+            },
+          );
         }
 
         final linksList = snapshot.data!;
@@ -194,7 +214,7 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF5A4B6E), // Matched dark lavender tone from image
+        color: const Color(0xFF5A4B6E),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -215,54 +235,18 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
           const SizedBox(width: 12),
           // B: Timer icon followed by formatted maximum discrete string metric
           const Icon(
-            Icons.access_time, // Open outline clock matching visual asset
+            Icons.access_time,
             color: Colors.white,
             size: 18,
           ),
           const SizedBox(width: 6),
           Text(
-            formatElapsedTime(linkData['elapsed'] as Duration),
+            TimeFormatterUtil.formatElapsedTime(
+                linkData['elapsed'] as Duration),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 14,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class EmptyNoData extends StatelessWidget {
-  const EmptyNoData({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.inbox_outlined,
-            size: 60,
-            color: Colors.white,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'No data yet',
-            style: TextStyle(color: Colors.white),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'When you add items, they will appear here.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white),
-          ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.add),
-            label: const Text('Add Item'),
           ),
         ],
       ),

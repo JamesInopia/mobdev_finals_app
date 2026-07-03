@@ -18,6 +18,34 @@ class LinkStorageService {
     await prefs.setStringList(_linksKey, rawList);
   }
 
+  // Seeds the database with hard-coded data if it's empty
+  Future<void> seedHardCodedData() async {
+    if (await isDatabaseEmpty()) {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      List<String> hardCodedList = [
+        jsonEncode({
+          'url': 'https://flutter.dev',
+          'timestamp': DateTime.now()
+              .subtract(const Duration(days: 3, hours: 4, minutes: 10))
+              .toIso8601String(),
+        }),
+        jsonEncode({
+          'url': 'https://pub.dev',
+          'timestamp': DateTime.now()
+              .subtract(const Duration(hours: 12))
+              .toIso8601String(),
+        }),
+        jsonEncode({
+          'url': 'https://github.com',
+          'timestamp': DateTime.now().toIso8601String(),
+        }),
+      ];
+
+      await prefs.setStringList(_linksKey, hardCodedList);
+    }
+  }
+
   // Retrieves all links and calculates the elapsed time
   Future<List<Map<String, dynamic>>> getLinks() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -58,33 +86,5 @@ class LinkStorageService {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final List<String>? rawList = prefs.getStringList(_linksKey);
     return rawList == null || rawList.isEmpty;
-  }
-
-  // Seeds the database with hard-coded data if it's empty
-  Future<void> seedHardCodedData() async {
-    if (await isDatabaseEmpty()) {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-      List<String> hardCodedList = [
-        jsonEncode({
-          'url': 'https://flutter.dev',
-          'timestamp': DateTime.now()
-              .subtract(const Duration(days: 3, hours: 4, minutes: 10))
-              .toIso8601String(),
-        }),
-        jsonEncode({
-          'url': 'https://pub.dev',
-          'timestamp': DateTime.now()
-              .subtract(const Duration(hours: 12))
-              .toIso8601String(),
-        }),
-        jsonEncode({
-          'url': 'https://github.com',
-          'timestamp': DateTime.now().toIso8601String(),
-        }),
-      ];
-
-      await prefs.setStringList(_linksKey, hardCodedList);
-    }
   }
 }

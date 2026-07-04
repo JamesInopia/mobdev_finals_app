@@ -164,17 +164,17 @@ class _ContactFormState extends State<ContactForm> {
                           items: const [
                             DropdownMenuItem(
                               value: 'Bug',
-                              child: Text('App Bug',
-                                  overflow: TextOverflow.ellipsis),
+                              child:
+                                  Text('Bug', overflow: TextOverflow.ellipsis),
                             ),
                             DropdownMenuItem(
                               value: 'Issue 2',
-                              child: Text('Website Down',
+                              child: Text('Issue 2',
                                   overflow: TextOverflow.ellipsis),
                             ),
                             DropdownMenuItem(
-                              value: 'issue 3',
-                              child: Text('Account Problem',
+                              value: 'Issue 3',
+                              child: Text('Issue 3',
                                   overflow: TextOverflow.ellipsis),
                             ),
                             DropdownMenuItem(

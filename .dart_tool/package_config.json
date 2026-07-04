@@ -3,13 +3,13 @@
   "packages": [
     {
       "name": "_fe_analyzer_shared",
-      "rootUri": "file:///C:/Users/User/AppData/Local/Pub/Cache/hosted/pub.dev/_fe_analyzer_shared-93.0.0",
+      "rootUri": "file:///C:/Users/User/AppData/Local/Pub/Cache/hosted/pub.dev/_fe_analyzer_shared-100.0.0",
       "packageUri": "lib/",
-      "languageVersion": "3.9"
+      "languageVersion": "3.11"
     },
     {
       "name": "analyzer",
-      "rootUri": "file:///C:/Users/User/AppData/Local/Pub/Cache/hosted/pub.dev/analyzer-10.0.1",
+      "rootUri": "file:///C:/Users/User/AppData/Local/Pub/Cache/hosted/pub.dev/analyzer-13.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.9"
     },
@@ -111,7 +111,7 @@
     },
     {
       "name": "dart_style",
-      "rootUri": "file:///C:/Users/User/AppData/Local/Pub/Cache/hosted/pub.dev/dart_style-3.1.7",
+      "rootUri": "file:///C:/Users/User/AppData/Local/Pub/Cache/hosted/pub.dev/dart_style-3.1.9",
       "packageUri": "lib/",
       "languageVersion": "3.10"
     },
@@ -285,7 +285,7 @@
     },
     {
       "name": "mockito",
-      "rootUri": "file:///C:/Users/User/AppData/Local/Pub/Cache/hosted/pub.dev/mockito-5.6.4",
+      "rootUri": "file:///C:/Users/User/AppData/Local/Pub/Cache/hosted/pub.dev/mockito-5.7.0",
       "packageUri": "lib/",
       "languageVersion": "3.7"
     },

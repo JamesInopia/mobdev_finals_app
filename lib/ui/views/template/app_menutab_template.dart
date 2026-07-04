@@ -15,7 +15,7 @@ class MenuTabTemplate extends StackedView<FixedLayoutViewModel> {
   @override
   Widget builder(
       BuildContext context, FixedLayoutViewModel viewModel, Widget? child) {
-    final titles = ["Settings", "About", "Report a Problem"];
+    final titles = ["Settings", "About", "Provide Feedback"];
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.navigation,
@@ -27,7 +27,9 @@ class MenuTabTemplate extends StackedView<FixedLayoutViewModel> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () async {
+            await Navigator.maybePop(context);
+          },
         ),
       ),
       body: IndexedStack(

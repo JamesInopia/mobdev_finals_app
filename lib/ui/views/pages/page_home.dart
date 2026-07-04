@@ -17,7 +17,8 @@ const _cards = [
 ];
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final void Function(int)? onNavigateToTab;
+  const HomePage({super.key, this.onNavigateToTab});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +35,9 @@ class HomePage extends StatelessWidget {
             ),
             const Text("Let's take a look at your progress!",
                 style: TextStyle(color: Colors.white)),
-            const Expanded(child: HorizontalGallery()),
+            Expanded(
+              child: HorizontalGallery(onNavigateToTab: onNavigateToTab),
+            ),
           ],
         ),
       ),
@@ -43,7 +46,8 @@ class HomePage extends StatelessWidget {
 }
 
 class HorizontalGallery extends StatefulWidget {
-  const HorizontalGallery({super.key});
+  final void Function(int)? onNavigateToTab;
+  const HorizontalGallery({super.key, this.onNavigateToTab});
 
   @override
   State<HorizontalGallery> createState() => _HorizontalGalleryState();
@@ -116,8 +120,7 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
                                 ? _buildDynamicLinkCardBody()
                                 : _buildStaticCardBody(
                                     card['content'] as String,
-                                    card['type']
-                                        as String, // FIX: Properly wrapped inside parameters
+                                    card['type'] as String,
                                   ),
                           ),
                         ],
@@ -152,16 +155,12 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
     );
   }
 
-  // Helper 1: Builds standard static text cards or fallback Empty state
   Widget _buildStaticCardBody(String content, String tabName) {
     if (content.isEmpty) {
       return EmptyNoData(
         tab: tabName,
         onActionPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const BlockerPage()),
-          );
+          widget.onNavigateToTab?.call(1); // switch to Blocker tab
         },
       );
     }
@@ -171,10 +170,9 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
     );
   }
 
-  // Helper 2: Asynchronously fetches SharedPreferences tracking data
   Widget _buildDynamicLinkCardBody() {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _storageService.getLinks(), // Using service instance
+      future: _storageService.getLinks(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
@@ -186,16 +184,12 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
           return EmptyNoData(
             tab: 'Websites',
             onActionPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const BlockerPage()),
-              );
+              widget.onNavigateToTab?.call(1); // switch to Blocker tab
             },
           );
         }
 
         final linksList = snapshot.data!;
-
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           itemCount: linksList.length,
@@ -208,7 +202,6 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
     );
   }
 
-  // Helper 3: Generates individual rows matching your visual layout exact rules
   Widget _buildCustomLinkRow(Map<String, dynamic> linkData) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
@@ -219,7 +212,6 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
       ),
       child: Row(
         children: [
-          // A: Truncate link with ellipsis automatically if it hits width bounds
           Expanded(
             child: Text(
               linkData['url'] ?? '',
@@ -233,20 +225,12 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
             ),
           ),
           const SizedBox(width: 12),
-          // B: Timer icon followed by formatted maximum discrete string metric
-          const Icon(
-            Icons.access_time,
-            color: Colors.white,
-            size: 18,
-          ),
+          const Icon(Icons.access_time, color: Colors.white, size: 18),
           const SizedBox(width: 6),
           Text(
             TimeFormatterUtil.formatElapsedTime(
                 linkData['elapsed'] as Duration),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: Colors.white, fontSize: 14),
           ),
         ],
       ),

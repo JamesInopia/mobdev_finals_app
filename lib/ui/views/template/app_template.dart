@@ -136,10 +136,10 @@ class FixedLayoutView extends StackedView<FixedLayoutViewModel> {
       ),
       body: IndexedStack(
         index: viewModel.currentIndex,
-        children: const [
-          HomePage(), // index = 0
-          BlockerPage(), // index = 1
-          TimerPage(), // index = 2
+        children: [
+          HomePage(onNavigateToTab: viewModel.setIndex),
+          const BlockerPage(), // index = 1
+          const TimerPage(), // index = 2
         ],
       ),
       bottomNavigationBar: Container(

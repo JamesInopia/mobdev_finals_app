@@ -78,10 +78,43 @@ class FixedLayoutView extends StackedView<FixedLayoutViewModel> {
                         );
                       }),
                   ListTile(
-                      title: const Text('Privacy'),
-                      onTap: () {
-                        developer.log('Works!');
-                      }),
+                    title: const Text('Privacy'),
+                    onTap: () {
+                      developer.log('Works!');
+
+                      // 1. Close the drawer first so it isn't open behind the popup
+                      Navigator.pop(context);
+
+                      // 2. Trigger the dialog popup
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text(
+                              'Privacy Policy',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            content: const SingleChildScrollView(
+                              child: Text(
+                                '<insert privacy policy here>\n\n'
+                                'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
+                                'Etiam accumsan sed justo eget convallis.',
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  // Closes the popup
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text('Close'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
                   ListTile(
                       title: const Text('Report a Problem'),
                       onTap: () {

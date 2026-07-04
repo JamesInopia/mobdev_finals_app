@@ -15,7 +15,7 @@ class MenuTabTemplate extends StackedView<FixedLayoutViewModel> {
   @override
   Widget builder(
       BuildContext context, FixedLayoutViewModel viewModel, Widget? child) {
-    final titles = ["Settings", "About", "Provide Feedback"];
+    final titles = ["Settings", "About Us", "Provide Feedback"];
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.navigation,

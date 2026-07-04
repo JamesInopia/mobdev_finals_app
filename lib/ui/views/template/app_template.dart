@@ -65,7 +65,7 @@ class FixedLayoutView extends StackedView<FixedLayoutViewModel> {
                         );
                       }),
                   ListTile(
-                      title: const Text('About'),
+                      title: const Text('About Us'),
                       onTap: () {
                         developer.log('Works!');
                         Navigator.pop(context);

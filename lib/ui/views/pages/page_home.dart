@@ -156,38 +156,36 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
   }
 
   Widget _buildStaticCardBody(String content, String tabName) {
-    if (content.isEmpty) {
-      return EmptyNoData(
-        tab: tabName,
-        onActionPressed: () {
-          widget.onNavigateToTab?.call(1); // switch to Blocker tab
-        },
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Text(content),
+  if (content.isEmpty) {
+    return EmptyCardBody(
+      message: 'No $tabName blocked yet',
+      buttonLabel: 'Go to Blocker',
+      onActionPressed: () => widget.onNavigateToTab?.call(1),
     );
   }
+  return Padding(
+    padding: const EdgeInsets.all(16),
+    child: Text(content),
+  );
+}
 
   Widget _buildDynamicLinkCardBody() {
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _storageService.getLinks(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: Colors.white),
-          );
-        }
+  return FutureBuilder<List<Map<String, dynamic>>>(
+    future: _storageService.getLinks(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        );
+      }
 
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return EmptyNoData(
-            tab: 'Websites',
-            onActionPressed: () {
-              widget.onNavigateToTab?.call(1); // switch to Blocker tab
-            },
-          );
-        }
+      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+        return EmptyCardBody(
+          message: 'No websites blocked yet',
+          buttonLabel: 'Go to Blocker',
+          onActionPressed: () => widget.onNavigateToTab?.call(1),
+        );
+      }
 
         final linksList = snapshot.data!;
         return ListView.builder(

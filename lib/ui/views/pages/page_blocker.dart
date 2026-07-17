@@ -105,8 +105,7 @@ class _BlockerPageState extends State<BlockerPage>
                     onPressed: () => _tabController.animateTo(0),
                     child: Text('APPS',
                         style: TextStyle(
-                            color: Colors.white,
-                            fontSize: screenWidth * 0.04)),
+                            color: Colors.white, fontSize: screenWidth * 0.04)),
                   ),
                 ),
                 Padding(
@@ -124,8 +123,7 @@ class _BlockerPageState extends State<BlockerPage>
                     onPressed: () => _tabController.animateTo(1),
                     child: Text('SITES',
                         style: TextStyle(
-                            color: Colors.white,
-                            fontSize: screenWidth * 0.04)),
+                            color: Colors.white, fontSize: screenWidth * 0.04)),
                   ),
                 ),
               ],
@@ -145,8 +143,8 @@ class _BlockerPageState extends State<BlockerPage>
                   onToggleView: () =>
                       setState(() => _isGridView = !_isGridView),
                   onRemove: (app) async {
-                    setState(() => _blockedApps.removeWhere(
-                        (a) => a.packageName == app.packageName));
+                    setState(() => _blockedApps
+                        .removeWhere((a) => a.packageName == app.packageName));
                     await _syncBlockedApps();
                   },
                   onUnblockMultiple: _unblockApps,
@@ -263,8 +261,7 @@ class _AppPickerSheetState extends State<_AppPickerSheet> {
                       final app = _filtered[index];
                       return ListTile(
                         tileColor: const Color(0xFF1C1723),
-                        leading:
-                            Image.memory(app.icon, width: 40, height: 40),
+                        leading: Image.memory(app.icon, width: 40, height: 40),
                         title: Text(app.appName,
                             style: const TextStyle(color: Colors.white)),
                         subtitle: Text(app.packageName,
@@ -353,8 +350,8 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel',
-                style: TextStyle(color: Colors.white54)),
+            child:
+                const Text('Cancel', style: TextStyle(color: Colors.white54)),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
@@ -435,9 +432,8 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
                 FloatingActionButton.small(
                   heroTag: 'select_mode',
                   onPressed: _toggleSelectionMode,
-                  backgroundColor: _isSelecting
-                      ? Colors.redAccent
-                      : AppColors.accent2,
+                  backgroundColor:
+                      _isSelecting ? Colors.redAccent : AppColors.accent2,
                   child: Icon(
                     _isSelecting ? Icons.close : Icons.checklist,
                     color: Colors.white,
@@ -500,8 +496,8 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
                       color: AppColors.accent1.withOpacity(0.6),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.check,
-                        color: Colors.white, size: 24),
+                    child:
+                        const Icon(Icons.check, color: Colors.white, size: 24),
                   ),
                 ),
             ],
@@ -535,10 +531,7 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
   Widget _buildGrid() {
     return GridView.builder(
       padding: EdgeInsets.fromLTRB(
-          12,
-          12,
-          12,
-          _isSelecting && _selectedPackages.isNotEmpty ? 120 : 100),
+          12, 12, 12, _isSelecting && _selectedPackages.isNotEmpty ? 120 : 100),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 4,
         crossAxisSpacing: 8,

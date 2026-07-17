@@ -4,6 +4,10 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.provider.Settings;
 
@@ -78,6 +82,9 @@ public class MainActivity extends FlutterActivity {
                         updateBlockedApps(packages);
                         result.success(null);
                         break;
+                    case "getBlockedApps":
+                        result.success(getBlockedApps());
+                        break;
                     default:
                         result.notImplemented();
                         break;
@@ -115,6 +122,57 @@ public class MainActivity extends FlutterActivity {
             .edit()
             .putString("blocked_packages", android.text.TextUtils.join(",", packages))
             .apply();
+    }
+
+    private List<Map<String, Object>> getBlockedApps() {
+        String saved = getSharedPreferences("blocker_prefs", MODE_PRIVATE).getString("blocked_packages", "");
+
+        List<Map<String, Object>> apps = new ArrayList<>();
+        if(saved.isEmpty()) {
+            return apps;
+        }
+
+        PackageManager pm = getPackageManager();
+        for(String packageName : saved.split(",")) {
+            try {
+                // get the app's info then use it to get its name and icon
+                ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
+                String appName = pm.getApplicationLabel(appInfo).toString();
+                Drawable appIcon = pm.getApplicationIcon(appInfo);
+
+                // convert the Drawable icon into a Bitmap icon
+                Bitmap bitmap = drawableToBitmap(appIcon);
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+
+                Map<String, Object> map = new HashMap<>();
+                map.put("appName", appName);
+                map.put("packageName", packageName);
+                map.put("icon", stream.toByteArray());
+                apps.add(map);
+            } catch(PackageManager.NameNotFoundException e) {
+                // skip uninstalled apps that were also blocked
+            }
+        }
+        return apps;
+    }
+
+    private Bitmap drawableToBitmap(Drawable drawable) {
+        if(drawable instanceof BitmapDrawable) {
+            return ((BitmapDrawable) drawable).getBitmap();
+        }
+
+        Bitmap bitmap = Bitmap.createBitmap(
+            drawable.getIntrinsicWidth(),
+            drawable.getIntrinsicHeight(),
+            Bitmap.Config.ARGB_8888
+        );
+
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+        
+        return bitmap;
     }
 
     private List<Map<String, Object>> getInstalledApps() {
@@ -167,14 +225,14 @@ public class MainActivity extends FlutterActivity {
                 if (label.equals(packageName) || label.trim().isEmpty()) continue;
 
                 // Convert the app icon to PNG bytes to send across the MethodChannel
-                android.graphics.drawable.Drawable icon = pm.getApplicationIcon(packageName);
+                Drawable icon = pm.getApplicationIcon(packageName);
                 int width  = icon.getIntrinsicWidth()  > 0 ? icon.getIntrinsicWidth()  : 48;
                 int height = icon.getIntrinsicHeight() > 0 ? icon.getIntrinsicHeight() : 48;
 
-                android.graphics.Bitmap bitmap = android.graphics.Bitmap.createBitmap(
+                Bitmap bitmap = android.graphics.Bitmap.createBitmap(
                     width, height, android.graphics.Bitmap.Config.ARGB_8888
                 );
-                android.graphics.Canvas canvas = new android.graphics.Canvas(bitmap);
+                Canvas canvas = new android.graphics.Canvas(bitmap);
                 icon.setBounds(0, 0, width, height);
                 icon.draw(canvas);
 

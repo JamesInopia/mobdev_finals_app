@@ -10,7 +10,6 @@ import '../pages/page_timer.dart';
 import '../pages/page_settings.dart';
 import '../pages/page_about.dart';
 import '../pages/page_report.dart';
-import 'package:mobdev_finals_app/ui/common/app_colors.dart';
 
 //temporary for button
 import 'dart:developer' as developer;
@@ -39,7 +38,7 @@ class FixedLayoutView extends StackedView<FixedLayoutViewModel> {
         ),
       ),
       drawer: Drawer(
-        backgroundColor: AppColors.accent3,
+        backgroundColor: AppColors.menuNavigation,
         child: ListView(
           padding: const EdgeInsets.only(top: 30, left: 5, right: 5),
           children: [
@@ -54,7 +53,6 @@ class FixedLayoutView extends StackedView<FixedLayoutViewModel> {
                   ListTile(
                       title: const Text('Settings'),
                       onTap: () {
-                        developer.log('Works!');
                         Navigator.pop(context);
                         Navigator.push(
                           context,
@@ -67,7 +65,6 @@ class FixedLayoutView extends StackedView<FixedLayoutViewModel> {
                   ListTile(
                       title: const Text('About Us'),
                       onTap: () {
-                        developer.log('Works!');
                         Navigator.pop(context);
                         Navigator.push(
                           context,
@@ -212,19 +209,10 @@ class _NavItem extends StatelessWidget {
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
-            color: selected
-                ? AppColors.accent1.withValues(alpha: 1)
-                : AppColors.accent1.withValues(alpha: 0),
+            // Flat color when selected, transparent when not
+            color: selected ? AppColors.accent1 : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: AppColors.accent1.withValues(alpha: 0.9),
-                      blurRadius: 12,
-                      spreadRadius: 2,
-                    ),
-                  ]
-                : [],
+            // No boxShadow here makes it completely flat!
           ),
           padding: const EdgeInsets.symmetric(vertical: 3),
           child: Column(

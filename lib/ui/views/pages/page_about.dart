@@ -7,10 +7,10 @@ class AboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text(
               'What is Grace.?',
               style: TextStyle(

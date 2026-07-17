@@ -32,7 +32,8 @@ public class MainActivity extends FlutterActivity {
         "com.google.android",
         "com.google",
         "com.android",
-        "com.nothing"
+        "com.nothing",
+        "com.samsung"
     );
 
     // Apps that still show on app blocker even if they match a blocked prefix (namely youtube and gmail)

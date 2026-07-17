@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mobdev_finals_app/services/storage_service.dart';
+import 'package:mobdev_finals_app/utilities/timeformat_utilities.dart';
 import 'package:mobdev_finals_app/services/app_fetcher.dart';
 import '../theme/app_colors.dart';
 
@@ -17,6 +19,14 @@ class _BlockerPageState extends State<BlockerPage>
   final List<InstalledApp> _blockedApps = [];
   bool _isGridView = false;
 
+  final LinkStorageService _storageService = LinkStorageService();
+  Stream<List<Map<String, dynamic>>>? _linksStream;
+  int _currentIndex = 0;
+
+  final Set<String> _selectedSitesUrls = {};
+  bool _isSelectingSites = false;
+  bool _isSitesMenuOpen = false;
+
   static const _channel = MethodChannel(
     'com.example.mobdev_finals_app/installed_apps',
   );
@@ -24,9 +34,14 @@ class _BlockerPageState extends State<BlockerPage>
   @override
   void initState() {
     super.initState();
+    _linksStream = _getLinksStream();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
-      if (mounted) setState(() {});
+      if (mounted && _tabController.index != _currentIndex) {
+        setState(() {
+          _currentIndex = _tabController.index;
+        });
+      }
     });
   }
 
@@ -64,93 +79,322 @@ class _BlockerPageState extends State<BlockerPage>
     await _syncBlockedApps();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+  Stream<List<Map<String, dynamic>>> _getLinksStream() async* {
+    while (true) {
+      try {
+        final links = await _storageService.getLinks();
+        yield links;
+      } catch (e) {
+        yield [];
+      }
+      await Future.delayed(const Duration(seconds: 1));
+    }
+  }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF1C1723),
-      appBar: AppBar(
-        title: Text(
-          'Need a Break?',
-          style: TextStyle(
-            color: AppColors.text1,
-            fontSize: screenWidth * 0.05,
-          ),
-        ),
-        centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(gradient: AppColors.appBG),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Container(
-            alignment: Alignment.center,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _tabController.index == 0
-                          ? AppColors.accent1
-                          : AppColors.accent2,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25)),
-                      minimumSize:
-                          Size(screenWidth * 0.35, screenHeight * 0.06),
-                    ),
-                    onPressed: () => _tabController.animateTo(0),
-                    child: Text('APPS',
-                        style: TextStyle(
-                            color: Colors.white, fontSize: screenWidth * 0.04)),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _tabController.index == 1
-                          ? AppColors.accent1
-                          : AppColors.accent2,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25)),
-                      minimumSize:
-                          Size(screenWidth * 0.35, screenHeight * 0.06),
-                    ),
-                    onPressed: () => _tabController.animateTo(1),
-                    child: Text('SITES',
-                        style: TextStyle(
-                            color: Colors.white, fontSize: screenWidth * 0.04)),
-                  ),
-                ),
-              ],
+  void _openSiteInputDialog() {
+    final TextEditingController urlController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.menuNavigation,
+        title: const Text('Add Site to Block',
+            style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: urlController,
+          autofocus: true,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: 'e.g., facebook.com',
+            hintStyle: const TextStyle(color: Colors.white38),
+            filled: true,
+            fillColor: const Color(0xFF3E2D52),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
             ),
           ),
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _blockedApps.isEmpty
-              ? EmptyNoData(tab: "Apps", onAdd: _openAppPicker)
-              : _BlockedAppsList(
-                  apps: _blockedApps,
-                  onAdd: _openAppPicker,
-                  isGridView: _isGridView,
-                  onToggleView: () =>
-                      setState(() => _isGridView = !_isGridView),
-                  onRemove: (app) async {
-                    setState(() => _blockedApps
-                        .removeWhere((a) => a.packageName == app.packageName));
-                    await _syncBlockedApps();
-                  },
-                  onUnblockMultiple: _unblockApps,
-                ),
-          EmptyNoData(tab: "Sites", onAdd: () {}),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(), // Cancel exits popup
+            child:
+                const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final text = urlController.text.trim();
+              if (text.isNotEmpty) {
+                await _storageService.addLink(text); // Triggers addLink service
+                Navigator.of(context).pop();
+              }
+            },
+            child: const Text('Submit',
+                style: TextStyle(color: AppColors.accent1)),
+          ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _unblockMultipleSites(List<String> urls) async {
+    for (String url in urls) {
+      await _storageService.removeLink(url);
+    }
+  }
+
+  Future<void> _confirmSingleSiteUnblock(String url) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.menuNavigation,
+        title:
+            const Text('Unblock Site', style: TextStyle(color: Colors.white)),
+        content: Text('Do you want to unblock "$url"?',
+            style: const TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child:
+                const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child:
+                const Text('Remove', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _storageService.removeLink(url);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(left: 23.0, right: 23.0),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 20.0, bottom: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _tabController.index == 0
+                                ? AppColors.accent1
+                                : AppColors.accent2,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25)),
+                            minimumSize:
+                                Size(screenWidth * 0.35, screenHeight * 0.06),
+                          ),
+                          onPressed: () => _tabController.animateTo(0),
+                          child: Text(
+                            'APPS',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'RobotoFlex',
+                                fontWeight: FontWeight.w900,
+                                fontSize: screenWidth * 0.05),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _tabController.index == 1
+                                ? AppColors.accent1
+                                : AppColors.accent2,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25)),
+                            minimumSize:
+                                Size(screenWidth * 0.35, screenHeight * 0.06),
+                          ),
+                          onPressed: () => _tabController.animateTo(1),
+                          child: Text(
+                            'SITES',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'RobotoFlex',
+                                fontWeight: FontWeight.w900,
+                                fontSize: screenWidth * 0.05),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Main Tab Content Container
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 23.0),
+                  decoration: BoxDecoration(
+                    color: AppColors.container,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.containerStroke,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _blockedApps.isEmpty
+                            ? EmptyNoData(tab: "Apps", onAdd: _openAppPicker)
+                            : _BlockedAppsList(
+                                apps: _blockedApps,
+                                onAdd: _openAppPicker,
+                                isGridView: _isGridView,
+                                onToggleView: () =>
+                                    setState(() => _isGridView = !_isGridView),
+                                onRemove: (app) async {
+                                  setState(() => _blockedApps.removeWhere(
+                                      (a) => a.packageName == app.packageName));
+                                  await _syncBlockedApps();
+                                },
+                                onUnblockMultiple: _unblockApps,
+                              ),
+                        _SitesTab(
+                          linksStream: _linksStream,
+                          buildRow: _buildSiteListRow,
+                          selectedUrls: _selectedSitesUrls.toList(),
+                          isSelecting: _isSelectingSites,
+                          isMenuOpen: _isSitesMenuOpen,
+                          onAddSitePressed: _openSiteInputDialog,
+                          onMenuToggle: (isOpen) =>
+                              setState(() => _isSitesMenuOpen = isOpen),
+                          onSelectionModeToggle: (isSelecting) => setState(() {
+                            _isSelectingSites = isSelecting;
+                            if (!isSelecting) _selectedSitesUrls.clear();
+                          }),
+                          onTileTapped: (url) {
+                            setState(() {
+                              if (_selectedSitesUrls.contains(url)) {
+                                _selectedSitesUrls.remove(url);
+                              } else {
+                                _selectedSitesUrls.add(url);
+                              }
+                            });
+                          },
+                          onConfirmUnblock: () async {
+                            final toRemove = _selectedSitesUrls.toList();
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                backgroundColor: AppColors.menuNavigation,
+                                title: const Text('Unblock Sites',
+                                    style: TextStyle(color: Colors.white)),
+                                content: Text(
+                                    'Unblock ${toRemove.length} selected site${toRemove.length == 1 ? '' : 's'}?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(false),
+                                    child: const Text('Cancel',
+                                        style:
+                                            TextStyle(color: Colors.white54)),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(true),
+                                    child: const Text('Unblock',
+                                        style:
+                                            TextStyle(color: Colors.redAccent)),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirmed == true) {
+                              await _unblockMultipleSites(toRemove);
+                              setState(() {
+                                _selectedSitesUrls.clear();
+                                _isSelectingSites = false;
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSiteListRow(
+    Map<String, dynamic> linkData, {
+    required bool isSelected,
+    required bool isSelecting,
+    required VoidCallback onTap,
+    required VoidCallback onLongPress,
+  }) {
+    final String url = linkData['url'] ?? '';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14.0),
+      child: ListTile(
+        dense: true,
+        visualDensity: const VisualDensity(vertical: 0.5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+        tileColor: isSelected
+            ? AppColors.accent2.withValues(alpha: 0.3)
+            : AppColors.containerItem,
+        leading: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.accent1 : Colors.white10,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            isSelected ? Icons.check : Icons.language,
+            color: isSelected ? Colors.black : Colors.white70,
+            size: 24,
+          ),
+        ),
+        title: Text(
+          url,
+          style: TextStyle(
+            color: isSelected ? AppColors.accent1 : Colors.white,
+            fontWeight: FontWeight.w500,
+            fontSize: 18,
+          ),
+        ),
+        subtitle: Text(
+          TimeFormatterUtil.formatElapsedTime(linkData['elapsed'] as Duration),
+          style: const TextStyle(color: Colors.white38, fontSize: 11),
+        ),
+        onTap: isSelecting ? onTap : null, // Selection tap context
+        onLongPress: isSelecting
+            ? null
+            : () => _confirmSingleSiteUnblock(url), // Requirement D long press
       ),
     );
   }
@@ -206,73 +450,75 @@ class _AppPickerSheetState extends State<_AppPickerSheet> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
 
-    return Container(
-      height: screenHeight * 0.8,
-      decoration: const BoxDecoration(
-        color: Color(0xFF1C1723),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(2),
+    return Material(
+      color: AppColors.menuNavigation,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        height: screenHeight * 0.8,
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Select an App to Block',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+            const SizedBox(height: 16),
+            const Text(
+              'Select an App to Block',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              controller: _search,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'Search apps...',
-                hintStyle: const TextStyle(color: Colors.white38),
-                prefixIcon: const Icon(Icons.search, color: Colors.white38),
-                filled: true,
-                fillColor: const Color(0xFF3E2D52),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                controller: _search,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Search apps...',
+                  hintStyle: const TextStyle(color: Colors.white38),
+                  prefixIcon: const Icon(Icons.search, color: Colors.white38),
+                  filled: true,
+                  fillColor: const Color(0xFF3E2D52),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    itemCount: _filtered.length,
-                    itemBuilder: (context, index) {
-                      final app = _filtered[index];
-                      return ListTile(
-                        tileColor: const Color(0xFF1C1723),
-                        leading: Image.memory(app.icon, width: 40, height: 40),
-                        title: Text(app.appName,
-                            style: const TextStyle(color: Colors.white)),
-                        subtitle: Text(app.packageName,
-                            style: const TextStyle(
-                                color: Colors.white38, fontSize: 11)),
-                        onTap: () => Navigator.of(context).pop(app),
-                      );
-                    },
-                  ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Expanded(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: _filtered.length,
+                      itemBuilder: (context, index) {
+                        final app = _filtered[index];
+                        return ListTile(
+                          tileColor: AppColors.menuNavigation,
+                          leading:
+                              Image.memory(app.icon, width: 40, height: 40),
+                          title: Text(app.appName,
+                              style: const TextStyle(color: Colors.white)),
+                          subtitle: Text(app.packageName,
+                              style: const TextStyle(
+                                  color: Colors.white38, fontSize: 11)),
+                          onTap: () => Navigator.of(context).pop(app),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -309,6 +555,9 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
   // Whether selection mode is active
   bool _isSelecting = false;
 
+  // Shows/hide the add button, grid/list layout button, and multiselect button
+  bool _isMenuOpen = false;
+
   void _toggleSelectionMode() {
     setState(() {
       _isSelecting = !_isSelecting;
@@ -337,7 +586,7 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF261F32),
+        backgroundColor: AppColors.menuNavigation,
         title: const Text(
           'Unblock Apps',
           style: TextStyle(color: Colors.white),
@@ -373,12 +622,25 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF1C1723),
+    return Material(
+      color: Colors.transparent,
       child: Stack(
         children: [
           // Main content — list or grid
           widget.isGridView ? _buildGrid() : _buildList(),
+
+          // Darken Background Overlay (only visible when menu is expanded)
+          if (_isMenuOpen)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => setState(() => _isMenuOpen = false),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  color: Colors.black
+                      .withValues(alpha: 0.6), // Dim focus background
+                ),
+              ),
+            ),
 
           // Bottom unblock bar — only visible when apps are selected
           if (_isSelecting && _selectedPackages.isNotEmpty)
@@ -388,16 +650,6 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
               right: 0,
               child: Container(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF261F32),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, -4),
-                    ),
-                  ],
-                ),
                 child: SizedBox(
                   height: 52,
                   child: ElevatedButton.icon(
@@ -421,42 +673,104 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
               ),
             ),
 
-          // FAB column — top to bottom: select, toggle view, add
+          // FAB Menu
           Positioned(
             bottom: 24,
             right: 16,
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // Select / cancel selection mode button
-                FloatingActionButton.small(
-                  heroTag: 'select_mode',
-                  onPressed: _toggleSelectionMode,
-                  backgroundColor:
-                      _isSelecting ? Colors.redAccent : AppColors.accent2,
-                  child: Icon(
-                    _isSelecting ? Icons.close : Icons.checklist,
-                    color: Colors.white,
+                if (_isMenuOpen) ...[
+                  // Multi-Select Menu Button
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Multi Select',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500)),
+                      const SizedBox(width: 12),
+                      FloatingActionButton(
+                        heroTag: 'select_mode',
+                        onPressed: () {
+                          _toggleSelectionMode();
+                          setState(() => _isMenuOpen = false);
+                        },
+                        backgroundColor:
+                            _isSelecting ? Colors.redAccent : AppColors.accent2,
+                        child: Icon(
+                            _isSelecting ? Icons.close : Icons.checklist,
+                            color: Colors.white),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 12),
-                // Toggle list/grid view
-                FloatingActionButton.small(
-                  heroTag: 'toggle_view',
-                  onPressed: widget.onToggleView,
-                  backgroundColor: AppColors.accent2,
-                  child: Icon(
-                    widget.isGridView ? Icons.list : Icons.grid_view,
-                    color: Colors.white,
+                  const SizedBox(height: 12),
+
+                  // Grid View Menu Button
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Grid View',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500)),
+                      const SizedBox(width: 12),
+                      FloatingActionButton(
+                        heroTag: 'toggle_view',
+                        onPressed: () {
+                          widget.onToggleView();
+                          setState(() => _isMenuOpen = false);
+                        },
+                        backgroundColor: AppColors.accent2,
+                        child: Icon(
+                            widget.isGridView ? Icons.list : Icons.grid_view,
+                            color: Colors.white),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 12),
-                // Add new app to block
-                FloatingActionButton(
-                  heroTag: 'add_app',
-                  onPressed: widget.onAdd,
-                  backgroundColor: AppColors.accent1,
-                  child: const Icon(Icons.add, color: Colors.black),
+                  const SizedBox(height: 12),
+
+                  // Add App Menu Button
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Add App',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500)),
+                      const SizedBox(width: 12),
+                      FloatingActionButton(
+                        heroTag: 'add_app',
+                        onPressed: () {
+                          widget.onAdd();
+                          setState(() => _isMenuOpen = false);
+                        },
+                        backgroundColor: AppColors.accent1,
+                        child: const Icon(Icons.add, color: Colors.black),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Main Collapsible Toggle Action Button
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: _isMenuOpen ? 42 : 56,
+                  height: _isMenuOpen ? 42 : 56,
+                  child: FloatingActionButton(
+                    heroTag: 'menu_toggle',
+                    onPressed: () => setState(() => _isMenuOpen = !_isMenuOpen),
+                    backgroundColor:
+                        _isMenuOpen ? Colors.redAccent : AppColors.accent2,
+                    shape: const CircleBorder(),
+                    child: Icon(
+                      _isMenuOpen ? Icons.close : Icons.edit_square,
+                      color: Colors.white,
+                      size: _isMenuOpen ? 20 : 24,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -471,57 +785,78 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
     return ListView.builder(
       // Extra bottom padding when unblock bar is showing
       padding: EdgeInsets.only(
+          top: 12,
+          left: 12,
+          right: 12,
           bottom: _isSelecting && _selectedPackages.isNotEmpty ? 120 : 100),
       itemCount: widget.apps.length,
       itemBuilder: (context, index) {
         final app = widget.apps[index];
         final isSelected = _selectedPackages.contains(app.packageName);
 
-        return ListTile(
-          // Highlight selected tiles
-          tileColor: isSelected
-              ? AppColors.accent2.withOpacity(0.3)
-              : const Color(0xFF1C1723),
-          leading: Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.memory(app.icon, width: 44, height: 44),
-              ),
-              // Checkmark overlay when selected
-              if (isSelected)
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.accent1.withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child:
-                        const Icon(Icons.check, color: Colors.white, size: 24),
-                  ),
-                ),
-            ],
-          ),
-          title: Text(
-            app.appName,
-            style: TextStyle(
-              color: isSelected ? AppColors.accent1 : Colors.white,
-              fontWeight: FontWeight.w500,
+        return Padding(
+          // This adds the spacing between each card item
+          padding: const EdgeInsets.only(bottom: 14.0),
+          child: ListTile(
+            dense: true,
+            visualDensity: const VisualDensity(vertical: 0.5),
+            // Large rounded corners matching your screenshot
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
             ),
-          ),
-          subtitle: Text(
-            app.packageName,
-            style: const TextStyle(color: Colors.white38, fontSize: 11),
-          ),
-          // In selection mode tapping selects, otherwise show remove button
-          trailing: _isSelecting
-              ? null
-              : IconButton(
-                  icon: const Icon(Icons.remove_circle_outline,
-                      color: Colors.redAccent),
-                  onPressed: () => widget.onRemove(app),
+            // Increased internal padding for that spacious layout look
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+
+            // Highlight selected tiles
+            tileColor: isSelected
+                ? AppColors.accent2.withValues(alpha: 0.3)
+                : AppColors.containerItem,
+
+            leading: Stack(
+              children: [
+                ClipRRect(
+                  // Increased radius slightly to match the rounded image look
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.memory(app.icon,
+                      width: 48, height: 48, fit: BoxFit.cover),
                 ),
-          onTap: _isSelecting ? () => _toggleAppSelection(app) : null,
+                // Checkmark overlay when selected
+                if (isSelected)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.accent1.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.check,
+                          color: Colors.white, size: 24),
+                    ),
+                  ),
+              ],
+            ),
+            title: Text(
+              app.appName,
+              style: TextStyle(
+                color: isSelected ? AppColors.accent1 : Colors.white,
+                fontWeight: FontWeight.w500,
+                fontSize:
+                    18, // Sized up a bit to match the prominent image font
+              ),
+            ),
+            subtitle: Text(
+              app.packageName, // Preserved the package name sequence right here
+              style: const TextStyle(color: Colors.white38, fontSize: 11),
+            ),
+            // In selection mode tapping selects, otherwise show remove button
+            trailing: _isSelecting
+                ? null
+                : IconButton(
+                    icon: const Icon(Icons.remove_circle_outline,
+                        color: Colors.redAccent),
+                    onPressed: () => widget.onRemove(app),
+                  ),
+            onTap: _isSelecting ? () => _toggleAppSelection(app) : null,
+          ),
         );
       },
     );
@@ -596,7 +931,7 @@ class _GridAppItem extends StatelessWidget {
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: AppColors.accent1.withOpacity(0.6),
+                        color: AppColors.accent1.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.check,
@@ -656,43 +991,258 @@ class EmptyNoData extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF1C1723),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.inbox_outlined, size: 80, color: Colors.white24),
-              const SizedBox(height: 24),
-              Text(
-                'No $tab blocked yet',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.inbox_outlined, size: 80, color: Colors.white24),
+            const SizedBox(height: 24),
+            Text(
+              'No $tab blocked yet',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Block $tab that distract you to start being productive',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white54, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Block $tab that distract you to start being productive',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white54, fontSize: 14),
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add),
+              label: const Text('Add Item'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accent1,
+                foregroundColor: Colors.black,
               ),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: onAdd,
-                icon: const Icon(Icons.add),
-                label: const Text('Add Item'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accent1,
-                  foregroundColor: Colors.black,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Sites Tab (Kept Alive in Background) ──────────────────────────────────────
+
+class _SitesTab extends StatefulWidget {
+  final Stream<List<Map<String, dynamic>>>? linksStream;
+  final Widget Function(Map<String, dynamic>,
+      {required bool isSelected,
+      required bool isSelecting,
+      required VoidCallback onTap,
+      required VoidCallback onLongPress}) buildRow;
+  final VoidCallback onAddSitePressed;
+  final List<String> selectedUrls;
+  final bool isSelecting;
+  final bool isMenuOpen;
+  final void Function(bool) onMenuToggle;
+  final void Function(bool) onSelectionModeToggle;
+  final void Function(String) onTileTapped;
+  final Future<void> Function() onConfirmUnblock;
+
+  const _SitesTab({
+    required this.linksStream,
+    required this.buildRow,
+    required this.onAddSitePressed,
+    required this.selectedUrls,
+    required this.isSelecting,
+    required this.isMenuOpen,
+    required this.onMenuToggle,
+    required this.onSelectionModeToggle,
+    required this.onTileTapped,
+    required this.onConfirmUnblock,
+  });
+
+  @override
+  State<_SitesTab> createState() => _SitesTabState();
+}
+
+class _SitesTabState extends State<_SitesTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+
+    return Material(
+      color: Colors.transparent,
+      child: Stack(
+        children: [
+          // Stream Reader List
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: widget.linksStream,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting &&
+                  !snapshot.hasData) {
+                return const Center(
+                    child: CircularProgressIndicator(color: Colors.white));
+              }
+
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return EmptyNoData(
+                    tab: "Sites", onAdd: widget.onAddSitePressed);
+              }
+
+              final linksList = snapshot.data!;
+              return ListView.builder(
+                padding: EdgeInsets.only(
+                  top: 12,
+                  left: 12,
+                  right: 12,
+                  bottom: widget.isSelecting && widget.selectedUrls.isNotEmpty
+                      ? 120
+                      : 100,
+                ),
+                itemCount: linksList.length,
+                itemBuilder: (context, index) {
+                  final item = linksList[index];
+                  final url = item['url'] ?? '';
+                  final isSelected = widget.selectedUrls.contains(url);
+
+                  return widget.buildRow(
+                    item,
+                    isSelected: isSelected,
+                    isSelecting: widget.isSelecting,
+                    onTap: () => widget.onTileTapped(url),
+                    onLongPress: () => widget.onTileTapped(url),
+                  );
+                },
+              );
+            },
+          ),
+
+          // Menu Background Dim Focus Overlay
+          if (widget.isMenuOpen)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => widget.onMenuToggle(false),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  color: Colors.black.withValues(alpha: 0.6),
+                ),
+              ),
+            ),
+
+          // Multi-Select Action Panel Shelf
+          if (widget.isSelecting && widget.selectedUrls.isNotEmpty)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                child: SizedBox(
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    onPressed: widget.onConfirmUnblock,
+                    icon: const Icon(Icons.lock_open),
+                    label: Text(
+                      'Unblock ${widget.selectedUrls.length} Site${widget.selectedUrls.length == 1 ? '' : 's'}',
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          // 👉 Requirement A: Collapsible Dynamic FAB Action Stack
+          Positioned(
+            bottom: 24,
+            right: 16,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (widget.isMenuOpen) ...[
+                  // Option 1: Multi Select Option
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Multi Select',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500)),
+                      const SizedBox(width: 12),
+                      FloatingActionButton(
+                        heroTag: 'site_select_mode',
+                        onPressed: () {
+                          widget.onSelectionModeToggle(!widget.isSelecting);
+                          widget.onMenuToggle(false);
+                        },
+                        backgroundColor: widget.isSelecting
+                            ? Colors.redAccent
+                            : AppColors.accent2,
+                        child: Icon(
+                            widget.isSelecting ? Icons.close : Icons.checklist,
+                            color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Option 2: Add Site Option
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Add Site',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500)),
+                      const SizedBox(width: 12),
+                      FloatingActionButton(
+                        heroTag: 'add_site_action',
+                        onPressed: () {
+                          widget.onAddSitePressed();
+                          widget.onMenuToggle(false);
+                        },
+                        backgroundColor: AppColors.accent1,
+                        child: const Icon(Icons.add, color: Colors.black),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Control Toggle Anchor Button
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: widget.isMenuOpen ? 42 : 56,
+                  height: widget.isMenuOpen ? 42 : 56,
+                  child: FloatingActionButton(
+                    heroTag: 'site_menu_toggle',
+                    onPressed: () => widget.onMenuToggle(!widget.isMenuOpen),
+                    backgroundColor: widget.isMenuOpen
+                        ? Colors.redAccent
+                        : AppColors.accent2,
+                    shape: const CircleBorder(),
+                    child: Icon(
+                      widget.isMenuOpen ? Icons.close : Icons.edit_square,
+                      color: Colors.white,
+                      size: widget.isMenuOpen ? 20 : 24,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -11,32 +11,78 @@ const _cards = [
   {'type': 'Blocked Websites', 'content': 'DYNAMIC_STORAGE_LINK'},
   {'type': 'Apps in Timeout', 'content': ''},
   {
-    'type': 'Apps blocked for this period',
+    'type': 'Apps scheduled for blocking',
     'content': 'Some apps are blocked until tomorrow'
   },
 ];
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   final void Function(int)? onNavigateToTab;
   const HomePage({super.key, this.onNavigateToTab});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  late final Map<String, String> _selectedGreeting;
+  final List<Map<String, String>> _greetings = [
+    {'bold': "Hello there! ", 'body': "Let's have a look at your progress!"},
+    {'bold': "Welcome back! ", 'body': "Want to see how far you've come?"},
+    {'bold': "Hey there! ", 'body': "Here's how your doing as of late!"},
+    {'bold': "Good to see you! ", 'body': "Let's what your stats look like."},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _greetings.shuffle();
+    _selectedGreeting = _greetings.first;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(gradient: AppColors.appBG),
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Padding(
-              padding: EdgeInsets.all(20),
-              child: Text('Hello, [username]!',
-                  style: TextStyle(color: Colors.white)),
+            Padding(
+              padding: const EdgeInsets.only(
+                  top: 32.0, left: 20.0, right: 20.0, bottom: 20.0),
+              child: RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: _selectedGreeting['bold'],
+                      style: const TextStyle(
+                        fontFamily: 'RobotoFlex',
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.text1,
+                        fontSize: 30,
+                      ),
+                    ),
+                    const TextSpan(text: '\n'),
+                    // Part B: Clean Urbanist text body
+                    TextSpan(
+                      text: _selectedGreeting['body'],
+                      style: const TextStyle(
+                        fontFamily: 'Urbanist',
+                        fontWeight: FontWeight.normal,
+                        color: AppColors.text1,
+                        fontSize: 24,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            const Text("Let's take a look at your progress!",
-                style: TextStyle(color: Colors.white)),
             Expanded(
-              child: HorizontalGallery(onNavigateToTab: onNavigateToTab),
+              child: HorizontalGallery(onNavigateToTab: widget.onNavigateToTab),
             ),
           ],
         ),
@@ -45,6 +91,7 @@ class HomePage extends StatelessWidget {
   }
 }
 
+// ── This is where your gallery code lives completely unmodified ──
 class HorizontalGallery extends StatefulWidget {
   final void Function(int)? onNavigateToTab;
   const HorizontalGallery({super.key, this.onNavigateToTab});
@@ -72,6 +119,18 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
     super.dispose();
   }
 
+  Stream<List<Map<String, dynamic>>> _getLinksStream() async* {
+    while (true) {
+      try {
+        final links = await _storageService.getLinks();
+        yield links;
+      } catch (e) {
+        yield [];
+      }
+      await Future.delayed(const Duration(seconds: 1));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -94,7 +153,14 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
                 ),
                 child: Card(
                   margin: const EdgeInsets.symmetric(vertical: 24),
-                  color: AppColors.secondary2,
+                  color: AppColors.container,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: const BorderSide(
+                      color: AppColors.containerStroke,
+                      width: 1.5,
+                    ),
+                  ),
                   child: DefaultTextStyle(
                     style: Theme.of(context)
                         .textTheme
@@ -109,10 +175,16 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
                             padding: const EdgeInsets.all(12),
                             child: Text(
                               card['type'] as String,
+                              textAlign: TextAlign.center,
                               style: Theme.of(context)
                                   .textTheme
                                   .titleMedium
-                                  ?.copyWith(color: Colors.white),
+                                  ?.copyWith(
+                                    color: AppColors.text1,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w900,
+                                    fontFamily: 'RobotoFlex',
+                                  ),
                             ),
                           ),
                           Expanded(
@@ -156,36 +228,37 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
   }
 
   Widget _buildStaticCardBody(String content, String tabName) {
-  if (content.isEmpty) {
-    return EmptyCardBody(
-      message: 'No $tabName blocked yet',
-      buttonLabel: 'Go to Blocker',
-      onActionPressed: () => widget.onNavigateToTab?.call(1),
+    if (content.isEmpty) {
+      return EmptyCardBody(
+        message: 'No $tabName blocked yet',
+        buttonLabel: 'Go to Blocker',
+        onActionPressed: () => widget.onNavigateToTab?.call(1),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Text(content),
     );
   }
-  return Padding(
-    padding: const EdgeInsets.all(16),
-    child: Text(content),
-  );
-}
 
   Widget _buildDynamicLinkCardBody() {
-  return FutureBuilder<List<Map<String, dynamic>>>(
-    future: _storageService.getLinks(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        );
-      }
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _getLinksStream(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          );
+        }
 
-      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-        return EmptyCardBody(
-          message: 'No websites blocked yet',
-          buttonLabel: 'Go to Blocker',
-          onActionPressed: () => widget.onNavigateToTab?.call(1),
-        );
-      }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return EmptyCardBody(
+            message: 'No websites blocked yet',
+            buttonLabel: 'Go to Blocker',
+            onActionPressed: () => widget.onNavigateToTab?.call(1),
+          );
+        }
 
         final linksList = snapshot.data!;
         return ListView.builder(
@@ -205,7 +278,7 @@ class _HorizontalGalleryState extends State<HorizontalGallery> {
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF5A4B6E),
+        color: AppColors.containerItem,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

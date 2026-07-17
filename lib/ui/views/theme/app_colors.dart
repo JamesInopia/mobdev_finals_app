@@ -3,7 +3,12 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color navigation = Color(0xFF261F32);
+  static const Color navigation = Color(0xFF1A1428);
+  static const Color menuNavigation = Color(0xFF261F32);
+  static const Color background = Color(0xFF0E0929);
+  static const Color container = Color(0xFF160E2F);
+  static const Color containerStroke = Color(0xFF554A6C);
+  static const Color containerItem = Color(0xFF655E6F);
   static const Color accent1 = Color(0xFFB887F3);
   static const Color accent2 = Color(0xFF684B8C);
   static const Color accent3 = Color(0xFF3E2D52);

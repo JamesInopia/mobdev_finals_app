@@ -9,7 +9,6 @@ import 'package:mobdev_finals_app/services/storage_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final storageService = LinkStorageService();
-  await storageService.seedHardCodedData();
   await setupLocator();
   setupDialogUi();
   setupBottomSheetUi();

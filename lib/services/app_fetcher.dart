@@ -33,4 +33,25 @@ class AppFetcher {
       );
     }).toList();
   }
+
+  static Future<void> updateBlockedApps(List<String> packages) async {
+    await _channel.invokeMethod("updateBlockedApps", {"packages": packages});
+  }
+
+  static Future<List<InstalledApp>> getBlockedApps() async {
+    final List<dynamic>? result = await _channel.invokeMethod('getBlockedApps');
+
+    if (result == null) {
+      return [];
+    }
+
+    return result.map((item) {
+      final map = Map<String, dynamic>.from(item);
+      return InstalledApp(
+        appName: map['appName'] as String,
+        packageName: map['packageName'] as String,
+        icon: map['icon'] as Uint8List,
+      );
+    }).toList();
+  }
 }

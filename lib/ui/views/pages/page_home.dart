@@ -4,7 +4,6 @@ import '../theme/app_colors.dart';
 import 'package:mobdev_finals_app/ui/widgets/empty.dart';
 import 'package:mobdev_finals_app/services/storage_service.dart';
 import 'package:mobdev_finals_app/utilities/timeformat_utilities.dart';
-import 'package:mobdev_finals_app/ui/views/pages/page_blocker.dart';
 
 const _cards = [
   {'type': 'Blocked Applications', 'content': 'List of blocked apps goes here'},

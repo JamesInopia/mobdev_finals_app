@@ -1,4 +1,4 @@
-// loading screen 
+// loading screen
 // edit to match color scheme and have custom app logo
 
 import 'package:flutter/material.dart';
@@ -9,7 +9,7 @@ import 'package:mobdev_finals_app/ui/common/ui_helpers.dart';
 import 'startup_viewmodel.dart';
 
 class StartupView extends StackedView<StartupViewModel> {
-  const StartupView({Key? key}) : super(key: key);
+  const StartupView({super.key});
 
   @override
   Widget builder(

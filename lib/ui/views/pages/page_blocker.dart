@@ -247,22 +247,22 @@ class _BlockerPageState extends State<BlockerPage>
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 23.0),
-                  decoration: BoxDecoration(
-                    color: AppColors.container,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: AppColors.containerStroke,
-                      width: 1.5,
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _blockedApps.isEmpty
-                            ? EmptyNoData(tab: "Apps", onAdd: _openAppPicker)
-                            : _BlockedAppsList(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _blockedApps.isEmpty
+                          ? EmptyNoData(tab: "Apps", onAdd: _openAppPicker)
+                          : Card(
+                              // 💡 ADDED: Use a Card wrapper to match Home page style
+                              color: AppColors.container,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: const BorderSide(
+                                  color: AppColors.containerStroke,
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: _BlockedAppsList(
                                 apps: _blockedApps,
                                 onAdd: _openAppPicker,
                                 isGridView: _isGridView,
@@ -275,7 +275,17 @@ class _BlockerPageState extends State<BlockerPage>
                                 },
                                 onUnblockMultiple: _unblockApps,
                               ),
-                        _SitesTab(
+                            ),
+                      Card(
+                        color: AppColors.container,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: const BorderSide(
+                            color: AppColors.containerStroke,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: _SitesTab(
                           linksStream: _linksStream,
                           buildRow: _buildSiteListRow,
                           selectedUrls: _selectedSitesUrls.toList(),
@@ -335,11 +345,11 @@ class _BlockerPageState extends State<BlockerPage>
                             }
                           },
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
+              )
             ],
           ),
         ),
@@ -356,45 +366,64 @@ class _BlockerPageState extends State<BlockerPage>
   }) {
     final String url = linkData['url'] ?? '';
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14.0),
-      child: ListTile(
-        dense: true,
-        visualDensity: const VisualDensity(vertical: 0.5),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-        tileColor: isSelected
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14.0),
+      decoration: BoxDecoration(
+        color: isSelected
             ? AppColors.accent2.withValues(alpha: 0.3)
             : AppColors.containerItem,
-        leading: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.accent1 : Colors.white10,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            isSelected ? Icons.check : Icons.language,
-            color: isSelected ? Colors.black : Colors.white70,
-            size: 24,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: InkWell(
+        onTap: isSelecting ? onTap : null,
+        onLongPress: isSelecting ? null : () => _confirmSingleSiteUnblock(url),
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.accent1 : Colors.white10,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  isSelected ? Icons.check : Icons.language,
+                  color: isSelected ? Colors.black : Colors.white70,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      url,
+                      style: TextStyle(
+                        color: isSelected ? AppColors.accent1 : Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 18,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      TimeFormatterUtil.formatElapsedTime(
+                          linkData['elapsed'] as Duration),
+                      style:
+                          const TextStyle(color: Colors.white38, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
-        title: Text(
-          url,
-          style: TextStyle(
-            color: isSelected ? AppColors.accent1 : Colors.white,
-            fontWeight: FontWeight.w500,
-            fontSize: 18,
-          ),
-        ),
-        subtitle: Text(
-          TimeFormatterUtil.formatElapsedTime(linkData['elapsed'] as Duration),
-          style: const TextStyle(color: Colors.white38, fontSize: 11),
-        ),
-        onTap: isSelecting ? onTap : null, // Selection tap context
-        onLongPress: isSelecting
-            ? null
-            : () => _confirmSingleSiteUnblock(url), // Requirement D long press
       ),
     );
   }
@@ -549,19 +578,13 @@ class _BlockedAppsList extends StatefulWidget {
 }
 
 class _BlockedAppsListState extends State<_BlockedAppsList> {
-  // Stores package names of currently selected apps
   final Set<String> _selectedPackages = {};
-
-  // Whether selection mode is active
   bool _isSelecting = false;
-
-  // Shows/hide the add button, grid/list layout button, and multiselect button
   bool _isMenuOpen = false;
 
   void _toggleSelectionMode() {
     setState(() {
       _isSelecting = !_isSelecting;
-      // Clear selection when exiting selection mode
       if (!_isSelecting) _selectedPackages.clear();
     });
   }
@@ -576,21 +599,17 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
     });
   }
 
-  // Confirm and unblock all selected apps
   void _confirmUnblock() async {
     final toRemove = widget.apps
         .where((a) => _selectedPackages.contains(a.packageName))
         .toList();
 
-    // Show confirmation dialog before unblocking
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.menuNavigation,
-        title: const Text(
-          'Unblock Apps',
-          style: TextStyle(color: Colors.white),
-        ),
+        title:
+            const Text('Unblock Apps', style: TextStyle(color: Colors.white)),
         content: Text(
           'Unblock ${toRemove.length} app${toRemove.length == 1 ? '' : 's'}? '
           'They will be fully removed from the blocker.',
@@ -613,6 +632,7 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
 
     if (confirmed == true) {
       await widget.onUnblockMultiple(toRemove);
+      if (!mounted) return;
       setState(() {
         _selectedPackages.clear();
         _isSelecting = false;
@@ -626,23 +646,17 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
       color: Colors.transparent,
       child: Stack(
         children: [
-          // Main content — list or grid
           widget.isGridView ? _buildGrid() : _buildList(),
-
-          // Darken Background Overlay (only visible when menu is expanded)
           if (_isMenuOpen)
             Positioned.fill(
               child: GestureDetector(
                 onTap: () => setState(() => _isMenuOpen = false),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  color: Colors.black
-                      .withValues(alpha: 0.6), // Dim focus background
+                  color: Colors.black.withValues(alpha: 0.6),
                 ),
               ),
             ),
-
-          // Bottom unblock bar — only visible when apps are selected
           if (_isSelecting && _selectedPackages.isNotEmpty)
             Positioned(
               bottom: 0,
@@ -656,8 +670,7 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
                     onPressed: _confirmUnblock,
                     icon: const Icon(Icons.lock_open),
                     label: Text(
-                      'Unblock ${_selectedPackages.length} '
-                      'App${_selectedPackages.length == 1 ? '' : 's'}',
+                      'Unblock ${_selectedPackages.length} App${_selectedPackages.length == 1 ? '' : 's'}',
                       style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold),
                     ),
@@ -665,15 +678,12 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
                       backgroundColor: Colors.redAccent,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
+                          borderRadius: BorderRadius.circular(14)),
                     ),
                   ),
                 ),
               ),
             ),
-
-          // FAB Menu
           Positioned(
             bottom: 24,
             right: 16,
@@ -682,7 +692,6 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 if (_isMenuOpen) ...[
-                  // Multi-Select Menu Button
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -706,8 +715,6 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
                     ],
                   ),
                   const SizedBox(height: 12),
-
-                  // Grid View Menu Button
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -730,8 +737,6 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
                     ],
                   ),
                   const SizedBox(height: 12),
-
-                  // Add App Menu Button
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -753,8 +758,6 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
                   ),
                   const SizedBox(height: 16),
                 ],
-
-                // Main Collapsible Toggle Action Button
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   width: _isMenuOpen ? 42 : 56,
@@ -780,89 +783,99 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
     );
   }
 
-  // ── List view ──
   Widget _buildList() {
     return ListView.builder(
-      // Extra bottom padding when unblock bar is showing
-      padding: EdgeInsets.only(
-          top: 12,
-          left: 12,
-          right: 12,
-          bottom: _isSelecting && _selectedPackages.isNotEmpty ? 120 : 100),
+      padding: const EdgeInsets.all(12.0),
       itemCount: widget.apps.length,
       itemBuilder: (context, index) {
         final app = widget.apps[index];
         final isSelected = _selectedPackages.contains(app.packageName);
 
-        return Padding(
-          // This adds the spacing between each card item
-          padding: const EdgeInsets.only(bottom: 14.0),
-          child: ListTile(
-            dense: true,
-            visualDensity: const VisualDensity(vertical: 0.5),
-            // Large rounded corners matching your screenshot
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
-            // Increased internal padding for that spacious layout look
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-
-            // Highlight selected tiles
-            tileColor: isSelected
+        return Container(
+          margin: const EdgeInsets.only(bottom: 14.0),
+          decoration: BoxDecoration(
+            color: isSelected
                 ? AppColors.accent2.withValues(alpha: 0.3)
                 : AppColors.containerItem,
-
-            leading: Stack(
-              children: [
-                ClipRRect(
-                  // Increased radius slightly to match the rounded image look
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.memory(app.icon,
-                      width: 48, height: 48, fit: BoxFit.cover),
-                ),
-                // Checkmark overlay when selected
-                if (isSelected)
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.accent1.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: InkWell(
+            onTap: _isSelecting ? () => _toggleAppSelection(app) : null,
+            borderRadius: BorderRadius.circular(18),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  // Leading Icon/Image Stack
+                  Stack(
+                    children: [
+                      ClipRRect(
                         borderRadius: BorderRadius.circular(12),
+                        child: Image.memory(app.icon,
+                            width: 48, height: 48, fit: BoxFit.cover),
                       ),
-                      child: const Icon(Icons.check,
-                          color: Colors.white, size: 24),
+                      if (isSelected)
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.accent1.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.check,
+                                color: Colors.white, size: 24),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(width: 16),
+
+                  // App Name and Package Name
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          app.appName,
+                          style: TextStyle(
+                            color:
+                                isSelected ? AppColors.accent1 : Colors.white,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 18,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          app.packageName,
+                          style: const TextStyle(
+                              color: Colors.white38, fontSize: 11),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
-              ],
-            ),
-            title: Text(
-              app.appName,
-              style: TextStyle(
-                color: isSelected ? AppColors.accent1 : Colors.white,
-                fontWeight: FontWeight.w500,
-                fontSize:
-                    18, // Sized up a bit to match the prominent image font
+
+                  // Trailing Remove Button
+                  if (!_isSelecting) ...[
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline,
+                          color: Colors.redAccent),
+                      onPressed: () => widget.onRemove(app),
+                    ),
+                  ],
+                ],
               ),
             ),
-            subtitle: Text(
-              app.packageName, // Preserved the package name sequence right here
-              style: const TextStyle(color: Colors.white38, fontSize: 11),
-            ),
-            // In selection mode tapping selects, otherwise show remove button
-            trailing: _isSelecting
-                ? null
-                : IconButton(
-                    icon: const Icon(Icons.remove_circle_outline,
-                        color: Colors.redAccent),
-                    onPressed: () => widget.onRemove(app),
-                  ),
-            onTap: _isSelecting ? () => _toggleAppSelection(app) : null,
           ),
         );
       },
     );
   }
 
-  // ── Grid view — 4 columns ──
   Widget _buildGrid() {
     return GridView.builder(
       padding: EdgeInsets.fromLTRB(
@@ -877,15 +890,13 @@ class _BlockedAppsListState extends State<_BlockedAppsList> {
       itemBuilder: (context, index) {
         final app = widget.apps[index];
         final isSelected = _selectedPackages.contains(app.packageName);
-
         return GestureDetector(
           onTap: _isSelecting ? () => _toggleAppSelection(app) : null,
           child: _GridAppItem(
-            app: app,
-            isSelected: isSelected,
-            isSelecting: _isSelecting,
-            onRemove: widget.onRemove,
-          ),
+              app: app,
+              isSelected: isSelected,
+              isSelecting: _isSelecting,
+              onRemove: widget.onRemove),
         );
       },
     );
@@ -1031,7 +1042,6 @@ class EmptyNoData extends StatelessWidget {
 }
 
 // ── Sites Tab (Kept Alive in Background) ──────────────────────────────────────
-
 class _SitesTab extends StatefulWidget {
   final Stream<List<Map<String, dynamic>>>? linksStream;
   final Widget Function(Map<String, dynamic>,
@@ -1078,7 +1088,6 @@ class _SitesTabState extends State<_SitesTab>
       color: Colors.transparent,
       child: Stack(
         children: [
-          // Stream Reader List
           StreamBuilder<List<Map<String, dynamic>>>(
             stream: widget.linksStream,
             builder: (context, snapshot) {
@@ -1094,15 +1103,9 @@ class _SitesTabState extends State<_SitesTab>
               }
 
               final linksList = snapshot.data!;
+
               return ListView.builder(
-                padding: EdgeInsets.only(
-                  top: 12,
-                  left: 12,
-                  right: 12,
-                  bottom: widget.isSelecting && widget.selectedUrls.isNotEmpty
-                      ? 120
-                      : 100,
-                ),
+                padding: const EdgeInsets.all(12.0),
                 itemCount: linksList.length,
                 itemBuilder: (context, index) {
                   final item = linksList[index];
@@ -1120,8 +1123,6 @@ class _SitesTabState extends State<_SitesTab>
               );
             },
           ),
-
-          // Menu Background Dim Focus Overlay
           if (widget.isMenuOpen)
             Positioned.fill(
               child: GestureDetector(
@@ -1132,8 +1133,6 @@ class _SitesTabState extends State<_SitesTab>
                 ),
               ),
             ),
-
-          // Multi-Select Action Panel Shelf
           if (widget.isSelecting && widget.selectedUrls.isNotEmpty)
             Positioned(
               bottom: 0,
@@ -1161,8 +1160,6 @@ class _SitesTabState extends State<_SitesTab>
                 ),
               ),
             ),
-
-          // 👉 Requirement A: Collapsible Dynamic FAB Action Stack
           Positioned(
             bottom: 24,
             right: 16,
@@ -1171,7 +1168,6 @@ class _SitesTabState extends State<_SitesTab>
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 if (widget.isMenuOpen) ...[
-                  // Option 1: Multi Select Option
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -1196,8 +1192,6 @@ class _SitesTabState extends State<_SitesTab>
                     ],
                   ),
                   const SizedBox(height: 12),
-
-                  // Option 2: Add Site Option
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -1219,8 +1213,6 @@ class _SitesTabState extends State<_SitesTab>
                   ),
                   const SizedBox(height: 16),
                 ],
-
-                // Control Toggle Anchor Button
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   width: widget.isMenuOpen ? 42 : 56,

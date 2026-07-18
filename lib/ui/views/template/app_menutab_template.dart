@@ -6,7 +6,6 @@ import 'app_templatemodel.dart';
 import '../pages/page_settings.dart';
 import '../pages/page_about.dart';
 import '../pages/page_report.dart';
-import 'package:mobdev_finals_app/ui/common/app_colors.dart';
 
 class MenuTabTemplate extends StackedView<FixedLayoutViewModel> {
   final int initialIndex;

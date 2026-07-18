@@ -7,9 +7,6 @@ import 'app_templatemodel.dart';
 import '../pages/page_home.dart';
 import '../pages/page_blocker.dart';
 import '../pages/page_timer.dart';
-import '../pages/page_settings.dart';
-import '../pages/page_about.dart';
-import '../pages/page_report.dart';
 
 //temporary for button
 import 'dart:developer' as developer;

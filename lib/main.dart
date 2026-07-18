@@ -4,11 +4,9 @@ import 'package:mobdev_finals_app/app/app.dialogs.dart';
 import 'package:mobdev_finals_app/app/app.locator.dart';
 import 'package:mobdev_finals_app/app/app.router.dart';
 import 'package:stacked_services/stacked_services.dart';
-import 'package:mobdev_finals_app/services/storage_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final storageService = LinkStorageService();
   await setupLocator();
   setupDialogUi();
   setupBottomSheetUi();

@@ -1,7 +1,6 @@
 // all timer content
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mobdev_finals_app/main.dart';
 import 'package:mobdev_finals_app/services/app_fetcher.dart';
 import 'package:mobdev_finals_app/ui/views/theme/app_colors.dart';
 
@@ -80,103 +79,117 @@ class _TimerPageState extends State<TimerPage>
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(color: AppColors.secondary2),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Container(
-            alignment: Alignment.center,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _tabController.index == 0
-                          ? AppColors.accent1
-                          : AppColors.accent2,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25)),
-                      minimumSize:
-                          Size(screenWidth * 0.35, screenHeight * 0.06),
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(
+              left: 23.0,
+              right: 23.0), // Outer layout padding matches BlockerPage
+          child: Column(
+            children: [
+              // ── TOP BUTTON ROW ───────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.only(top: 20.0, bottom: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _tabController.index == 0
+                                ? AppColors.accent1
+                                : AppColors.accent2,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25)),
+                            minimumSize:
+                                Size(screenWidth * 0.35, screenHeight * 0.06),
+                          ),
+                          onPressed: () => _tabController.animateTo(0),
+                          child: Text(
+                            'TIME LIMIT',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'RobotoFlex',
+                                fontWeight: FontWeight.w900,
+                                fontSize: screenWidth * 0.04),
+                          ),
+                        ),
+                      ),
                     ),
-                    onPressed: () => _tabController.animateTo(0),
-                    child: Text('TIME LIMIT',
-                        style: TextStyle(
-                            color: Colors.white, fontSize: screenWidth * 0.04)),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _tabController.index == 1
+                                ? AppColors.accent1
+                                : AppColors.accent2,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25)),
+                            minimumSize:
+                                Size(screenWidth * 0.35, screenHeight * 0.06),
+                          ),
+                          onPressed: () => _tabController.animateTo(1),
+                          child: Text(
+                            'SCHEDULED',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'RobotoFlex',
+                                fontWeight: FontWeight.w900,
+                                fontSize: screenWidth * 0.04),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // ── THE TAB VIEW CONTENT ─────────────────────────────────────────
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.only(
+                      bottom: 23.0), // Match bottom margin from BlockerPage
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      Card(
+                        color: AppColors.container,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: const BorderSide(
+                            color: AppColors.containerStroke,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: EmptyNoData(
+                            tab: "Time Limits", onAdd: _openTimeLimitSheet),
+                      ),
+                      Card(
+                        color: AppColors.container,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: const BorderSide(
+                            color: AppColors.containerStroke,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: EmptyNoData(
+                            tab: "Schedules", onAdd: _openScheduleSheet),
+                      ),
+                    ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _tabController.index == 1
-                          ? AppColors.accent1
-                          : AppColors.accent2,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25)),
-                      minimumSize:
-                          Size(screenWidth * 0.35, screenHeight * 0.06),
-                    ),
-                    onPressed: () => _tabController.animateTo(1),
-                    child: Text('SCHEDULED',
-                        style: TextStyle(
-                            color: Colors.white, fontSize: screenWidth * 0.04)),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.secondary2,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Container(
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.secondary2,
-                  borderRadius: const BorderRadius.all(Radius.circular(20)),
-                  border: Border.all(width: 2.0, color: AppColors.accent1),
-                ),
-                child:
-                    EmptyNoData(tab: "Time Limits", onAdd: _openTimeLimitSheet),
-              ),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.secondary2,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Container(
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.secondary2,
-                  borderRadius: const BorderRadius.all(Radius.circular(20)),
-                  border: Border.all(width: 2.0, color: AppColors.accent1),
-                ),
-                child: EmptyNoData(tab: "Schedules", onAdd: _openScheduleSheet),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
 }
-
 // ── Time Limit Bottom Sheet ───────────────────────────────────────────────────
 
 class _TimeLimitSheet extends StatefulWidget {

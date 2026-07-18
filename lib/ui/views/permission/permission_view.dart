@@ -5,7 +5,7 @@ import '../theme/app_colors.dart';
 import 'permission_viewmodel.dart';
 
 class PermissionView extends StackedView<PermissionViewModel> {
-  const PermissionView({Key? key}) : super(key: key);
+  const PermissionView({super.key});
 
   @override
   Widget builder(

@@ -3,6 +3,7 @@ import 'package:mobdev_finals_app/app/app.bottomsheets.dart';
 import 'package:mobdev_finals_app/app/app.dialogs.dart';
 import 'package:mobdev_finals_app/app/app.locator.dart';
 import 'package:mobdev_finals_app/app/app.router.dart';
+import 'package:mobdev_finals_app/ui/views/theme/app_colors.dart';
 import 'package:stacked_services/stacked_services.dart';
 
 Future<void> main() async {
@@ -24,6 +25,14 @@ class MainApp extends StatelessWidget {
       onGenerateRoute: StackedRouter().onGenerateRoute,
       navigatorKey: StackedService.navigatorKey,
       navigatorObservers: [StackedService.routeObserver],
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: AppColors.background,
+        canvasColor: AppColors.background,
+        dialogTheme: const DialogThemeData(
+          backgroundColor: AppColors.container,
+        ),
+      ),
     );
   }
 }

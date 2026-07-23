@@ -84,24 +84,46 @@ class FixedLayoutView extends StackedView<FixedLayoutViewModel> {
                         context: context,
                         builder: (BuildContext context) {
                           return AlertDialog(
+                            backgroundColor: AppColors.container,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16.0),
+                              side: const BorderSide(
+                                color: AppColors.containerStroke,
+                                width: 1.5,
+                              ),
+                            ),
                             title: const Text(
                               'Privacy Policy',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
                             ),
                             content: const SingleChildScrollView(
                               child: Text(
                                 '<insert privacy policy here>\n\n'
                                 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
                                 'Etiam accumsan sed justo eget convallis.',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 14,
+                                  height: 1.4,
+                                ),
                               ),
                             ),
                             actions: [
                               TextButton(
                                 onPressed: () {
-                                  // Closes the popup
                                   Navigator.of(context).pop();
                                 },
-                                child: const Text('Close'),
+                                child: const Text(
+                                  'Close',
+                                  style: TextStyle(
+                                    color: AppColors.accent1,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ],
                           );

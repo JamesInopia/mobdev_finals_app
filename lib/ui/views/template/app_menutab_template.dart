@@ -1,4 +1,3 @@
-// template for settings and about page
 import 'package:flutter/material.dart';
 import 'package:mobdev_finals_app/ui/views/theme/app_colors.dart';
 import 'package:stacked/stacked.dart';
@@ -16,12 +15,15 @@ class MenuTabTemplate extends StackedView<FixedLayoutViewModel> {
       BuildContext context, FixedLayoutViewModel viewModel, Widget? child) {
     final titles = ["Settings", "About Us", "Provide Feedback"];
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.navigation,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         title: Text(
           titles[viewModel.currentIndex],
           style: const TextStyle(
-            color: Colors.white, // Put your desired color here
+            color: Colors.white,
           ),
         ),
         leading: IconButton(

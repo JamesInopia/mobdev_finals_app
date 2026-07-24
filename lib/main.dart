@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobdev_finals_app/app/app.bottomsheets.dart';
 import 'package:mobdev_finals_app/app/app.dialogs.dart';
 import 'package:mobdev_finals_app/app/app.locator.dart';
@@ -11,6 +12,11 @@ Future<void> main() async {
   await setupLocator();
   setupDialogUi();
   setupBottomSheetUi();
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
+
   runApp(const MainApp());
 }
 

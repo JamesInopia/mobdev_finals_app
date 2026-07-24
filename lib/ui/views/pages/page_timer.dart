@@ -1,8 +1,11 @@
 // all timer content
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:mobdev_finals_app/services/app_fetcher.dart';
 import 'package:mobdev_finals_app/ui/views/theme/app_colors.dart';
+import 'package:scroll_time_picker/scroll_time_picker.dart';
 
 class TimerPage extends StatefulWidget {
   const TimerPage({super.key});
@@ -204,6 +207,12 @@ class _TimeLimitSheetState extends State<_TimeLimitSheet> {
   bool _loading = true;
   final TextEditingController _search = TextEditingController();
 
+  Duration timeLimitDuration = const Duration(hours: 1, minutes: 0, seconds: 0);
+  Duration timeLimitMinimum = const Duration(hours: 1, minutes: 0, seconds: 0);
+
+  Duration penaltyDuration = const Duration(hours: 3, minutes: 0, seconds: 0);
+  Duration penaltyMinimum = const Duration(hours: 3, minutes: 0, seconds: 0);
+
   @override
   void initState() {
     super.initState();
@@ -220,124 +229,176 @@ class _TimeLimitSheetState extends State<_TimeLimitSheet> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
+    String twoDigits(int num) => num.toString().padLeft(2, '0');
+    final timeLimitHours = twoDigits(timeLimitDuration.inHours);
+    final timeLimitMinutes =
+        twoDigits(timeLimitDuration.inMinutes.remainder(60));
+    final timeLimitSeconds =
+        twoDigits(timeLimitDuration.inSeconds.remainder(60));
+
+    final penaltyHours = twoDigits(penaltyDuration.inHours);
+    final penaltyMinutes = twoDigits(penaltyDuration.inMinutes.remainder(60));
+    final penaltySeconds = twoDigits(penaltyDuration.inSeconds.remainder(60));
+
     return Container(
-      height: screenHeight * 0.5,
+      height: screenHeight * 0.54,
       decoration: const BoxDecoration(
         color: AppColors.secondary2,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Column(
-        children: [
-          const SizedBox(height: 12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(2),
+      child: Padding(
+        padding: EdgeInsets.all(screenWidth * 0.04),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: screenWidth * 0.12,
+              height: screenHeight * 0.005,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: screenWidth * 0.47,
-                height: screenHeight * 0.22,
-                decoration: BoxDecoration(
-                  color: AppColors.secondary3,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-                alignment: Alignment.center,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "TIME LIMIT",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 26,
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary3,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    child: SizedBox(
+                      height: screenHeight * 0.22,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "TIME LIMIT",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: screenWidth * 0.07,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: () {
+                              _SetTimerPopup.showPopup(
+                                  context,
+                                  "TIME LIMIT",
+                                  timeLimitDuration,
+                                  timeLimitMinimum, (selectedDuration) {
+                                setState(() {
+                                  timeLimitDuration = selectedDuration;
+                                });
+                              });
+                            },
+                            child: Text(
+                              "$timeLimitHours:$timeLimitMinutes:$timeLimitSeconds",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: screenWidth * 0.06,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "4:30:00",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                width: screenWidth * 0.47,
-                height: screenHeight * 0.22,
-                decoration: BoxDecoration(
-                  color: AppColors.secondary3,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-                alignment: Alignment.center,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "PENALTY",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 26,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "3:00:00",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: screenWidth * 0.47,
-                height: screenHeight * 0.22,
-                alignment: Alignment.center,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent3,
                   ),
-                  onPressed: () {},
-                  child: Text("CANCEL",
-                      style: TextStyle(
-                          color: Colors.white, fontSize: screenWidth * 0.06)),
                 ),
-              ),
-              const SizedBox(width: 15),
-              Container(
-                width: screenWidth * 0.47,
-                height: screenHeight * 0.22,
-                alignment: Alignment.center,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent2,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary3,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    child: SizedBox(
+                      height: screenHeight * 0.22,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "PENALTY",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: screenWidth * 0.07,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: () {
+                              _SetTimerPopup.showPopup(
+                                  context,
+                                  "PENALTY",
+                                  penaltyDuration,
+                                  penaltyMinimum, (selectedDuration) {
+                                setState(() {
+                                  penaltyDuration = selectedDuration;
+                                });
+                              });
+                            },
+                            child: Text(
+                              "$penaltyHours:$penaltyMinutes:$penaltySeconds",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: screenWidth * 0.06,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  onPressed: () {},
-                  child: Text("CONFIRM",
-                      style: TextStyle(
-                          color: Colors.white, fontSize: screenWidth * 0.06)),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+            const SizedBox(height: 30),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: screenHeight * 0.06,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent3,
+                      ),
+                      onPressed: () {},
+                      child: Text(
+                        "CANCEL",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: screenWidth * 0.06,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: SizedBox(
+                    height: screenHeight * 0.06,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent2,
+                      ),
+                      onPressed: () {},
+                      child: Text(
+                        "CONFIRM",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: screenWidth * 0.06,
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -357,9 +418,28 @@ class _ScheduleSheetState extends State<_ScheduleSheet> {
   bool _loading = true;
   final TextEditingController _search = TextEditingController();
 
+  late DateTime blockStartTime;
+  late DateTime blockEndTime;
+
+  int to24h(int hour12, bool isPm) {
+    int hour24;
+
+    if (isPm && hour12 != 12) {
+      hour24 = hour12 + 12;
+    } else if (!isPm && hour12 == 12) {
+      hour24 = 0;
+    } else {
+      hour24 = hour12;
+    }
+
+    return hour24;
+  }
+
   @override
   void initState() {
     super.initState();
+    blockStartTime = DateTime(2000, 1, 1, to24h(12, false), 0);
+    blockEndTime = DateTime(2000, 1, 1, to24h(12, true), 0);
   }
 
   @override
@@ -373,125 +453,425 @@ class _ScheduleSheetState extends State<_ScheduleSheet> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
+    String startTimeText = DateFormat('h:mm a').format(blockStartTime);
+    String endTimeText = DateFormat('h:mm a').format(blockEndTime);
+
     return Container(
-      height: screenHeight * 0.5,
+      height: screenHeight * 0.54,
       decoration: const BoxDecoration(
         color: AppColors.secondary2,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Column(
-        children: [
-          const SizedBox(height: 12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(2),
+      child: Padding(
+        padding: EdgeInsets.all(screenWidth * 0.04),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: screenWidth * 0.12,
+              height: screenHeight * 0.005,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary3,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    child: SizedBox(
+                      height: screenHeight * 0.22,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "BLOCK START",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: screenWidth * 0.06,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: () {
+                              _SetTimeOfDayPopup.showPopup(
+                                  context, "BLOCK START", blockStartTime,
+                                  (selectedTime) {
+                                setState(() {
+                                  blockStartTime = selectedTime;
+                                });
+                              });
+                            },
+                            child: Text(
+                              "$startTimeText",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: screenWidth * 0.06,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary3,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    child: SizedBox(
+                      height: screenHeight * 0.22,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "BLOCK END",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: screenWidth * 0.06,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: () {
+                              _SetTimeOfDayPopup.showPopup(
+                                  context, "BLOCK END", blockEndTime,
+                                  (selectedTime) {
+                                setState(() {
+                                  blockEndTime = selectedTime;
+                                });
+                              });
+                            },
+                            child: Text(
+                              "${endTimeText}",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: screenWidth * 0.06,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 30),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: screenHeight * 0.06,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent3,
+                      ),
+                      onPressed: () {},
+                      child: Text(
+                        "CANCEL",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: screenWidth * 0.06,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: SizedBox(
+                    height: screenHeight * 0.06,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent2,
+                      ),
+                      onPressed: () {},
+                      child: Text(
+                        "CONFIRM",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: screenWidth * 0.06,
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── CupertinoTimer Popup ───────────────────────────────────────────────────────────
+
+class _SetTimerPopup {
+  static void showPopup(
+    BuildContext context,
+    String timerType,
+    Duration initialTime,
+    Duration minimumTime,
+    ValueChanged<Duration> onTimeSelected,
+  ) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    Duration tempTime = initialTime;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: screenWidth * 0.05,
+            vertical: screenHeight * 0.05,
+          ),
+          child: SizedBox(
+            width: screenWidth * 0.9,
+            height: screenHeight * 0.45,
+            child: Padding(
+              padding: EdgeInsets.all(screenWidth * 0.04),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary3,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: SizedBox(
+                        width: screenWidth * 0.82,
+                        height: screenHeight * 0.08,
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            "SET $timerType",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: screenWidth * 0.08,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary3,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: SizedBox(
+                        width: screenWidth * 0.82,
+                        height: screenHeight * 0.22,
+                        child: CupertinoTimerPicker(
+                          mode: CupertinoTimerPickerMode.hms,
+                          initialTimerDuration: tempTime,
+                          onTimerDurationChanged: (Duration newDuration) {
+                            tempTime = newDuration;
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: screenHeight * 0.05,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.accent3,
+                              ),
+                              onPressed: () {
+                                Navigator.of(dialogContext).pop();
+                              },
+                              child: Text(
+                                "CANCEL",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: screenWidth * 0.05,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: SizedBox(
+                            height: screenHeight * 0.05,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.accent2,
+                              ),
+                              onPressed: () {
+                                if (tempTime >= minimumTime) {
+                                  onTimeSelected(tempTime);
+                                  Navigator.of(dialogContext).pop();
+                                } else {}
+                              },
+                              child: Text(
+                                "CONFIRM",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: screenWidth * 0.05,
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
+                    )
+                  ],
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: screenWidth * 0.47,
-                height: screenHeight * 0.22,
-                decoration: BoxDecoration(
-                  color: AppColors.secondary3,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-                alignment: Alignment.center,
+        );
+      },
+    );
+  }
+}
+
+// ── CupertinoDate Popup ───────────────────────────────────────────────────────────
+
+class _SetTimeOfDayPopup {
+  static void showPopup(
+    BuildContext context,
+    String timerType,
+    DateTime initialTime,
+    ValueChanged<DateTime> onTimeSelected,
+  ) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    DateTime tempTime = initialTime;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: screenWidth * 0.05,
+            vertical: screenHeight * 0.05,
+          ),
+          child: SizedBox(
+            width: screenWidth * 0.9,
+            height: screenHeight * 0.45,
+            child: Padding(
+              padding: EdgeInsets.all(screenWidth * 0.04),
+              child: SingleChildScrollView(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      "BLOCK START",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 26,
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary3,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: SizedBox(
+                        width: screenWidth * 0.82,
+                        height: screenHeight * 0.08,
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            "SET $timerType",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: screenWidth * 0.08,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Text(
-                      "5:00 PM",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary3,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: SizedBox(
+                        width: screenWidth * 0.82,
+                        height: screenHeight * 0.22,
+                        child: CupertinoDatePicker(
+                          mode: CupertinoDatePickerMode.time,
+                          use24hFormat: false,
+                          initialDateTime: tempTime,
+                          onDateTimeChanged: (DateTime newTime) {
+                            tempTime = newTime;
+                          },
+                        ),
                       ),
                     ),
+                    const SizedBox(height: 30),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: screenHeight * 0.05,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.accent3,
+                              ),
+                              onPressed: () {
+                                Navigator.of(dialogContext).pop();
+                              },
+                              child: Text(
+                                "CANCEL",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: screenWidth * 0.05,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: SizedBox(
+                            height: screenHeight * 0.05,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.accent2,
+                              ),
+                              onPressed: () {
+                                onTimeSelected(tempTime);
+                                Navigator.of(dialogContext).pop();
+                              },
+                              child: Text(
+                                "CONFIRM",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: screenWidth * 0.05,
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
+                    )
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
-              Container(
-                width: screenWidth * 0.47,
-                height: screenHeight * 0.22,
-                decoration: BoxDecoration(
-                  color: AppColors.secondary3,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-                alignment: Alignment.center,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "BLOCK END",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 26,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "5:00 AM",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: screenWidth * 0.47,
-                height: screenHeight * 0.22,
-                alignment: Alignment.center,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent3,
-                  ),
-                  onPressed: () {},
-                  child: Text("CANCEL",
-                      style: TextStyle(
-                          color: Colors.white, fontSize: screenWidth * 0.06)),
-                ),
-              ),
-              const SizedBox(width: 15),
-              Container(
-                width: screenWidth * 0.47,
-                height: screenHeight * 0.22,
-                alignment: Alignment.center,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent2,
-                  ),
-                  onPressed: () {},
-                  child: Text("CONFIRM",
-                      style: TextStyle(
-                          color: Colors.white, fontSize: screenWidth * 0.06)),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

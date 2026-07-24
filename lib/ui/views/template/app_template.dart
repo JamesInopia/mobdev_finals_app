@@ -102,9 +102,7 @@ class FixedLayoutView extends StackedView<FixedLayoutViewModel> {
                             ),
                             content: const SingleChildScrollView(
                               child: Text(
-                                '<insert privacy policy here>\n\n'
-                                'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
-                                'Etiam accumsan sed justo eget convallis.',
+                                'Will be added in a future release!',
                                 style: TextStyle(
                                   color: Colors.white70,
                                   fontSize: 14,

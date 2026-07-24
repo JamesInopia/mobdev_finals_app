@@ -1,5 +1,6 @@
-package com.example.mobdev_finals_app;
+package com.example.gracep;
 
+import com.example.gracep.BlockerAccessibilityService;
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.content.Intent;
